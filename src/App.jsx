@@ -11,6 +11,11 @@ function App() {
     const checkConnection = async () => {
       const configured = isSupabaseConfigured()
       
+      // Debug logging (remove in production)
+      console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Not set')
+      console.log('Supabase Key:', (import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY) ? 'Set' : 'Not set')
+      console.log('Is configured:', configured)
+      
       if (configured) {
         // Try a simple connection test
         try {
@@ -19,6 +24,7 @@ function App() {
           await supabase.auth.getSession()
           setConnected(true)
         } catch (err) {
+          console.warn('Supabase connection test failed:', err)
           // If configured but connection fails, still show as configured
           // (might be network issue or wrong credentials)
           setConnected(true)
