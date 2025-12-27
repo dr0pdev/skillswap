@@ -7,7 +7,7 @@ Skill Swap is an AI-assisted skill exchange platform that fixes the core flaw in
 ## 🎯 Key Features
 
 - **Fair Matching Algorithm**: Calculates skill value based on difficulty, demand, experience level, and reputation
-- **AI Skill Assessment**: Optional AI-powered assessment (via OpenRouter) to help users accurately self-report their skill levels
+- **AI Skill Assessment**: Optional AI-powered assessment (via Google Gemini) to help users accurately self-report their skill levels
 - **Transparent Fairness**: Every match includes an explainable fairness score (0-100) and plain-English explanation
 - **Reputation System**: Build trust through completed swaps and peer ratings
 - **Multi-user Swaps**: Support for direct (2-person) and cycle (3+ person) skill exchanges
@@ -25,7 +25,7 @@ Skill Swap is an AI-assisted skill exchange platform that fixes the core flaw in
 - **Supabase Postgres** - Structured data with RLS policies
 - **Supabase Auth** - Email/password authentication
 - **Supabase Edge Functions** - Serverless TypeScript functions for AI calls
-- **OpenRouter API** - AI skill assessment (advisory only, supports multiple models)
+- **Google Gemini API** - AI skill assessment (advisory only)
 
 ### Key Principle
 **No separate backend server** - Everything runs on Supabase infrastructure.
@@ -92,10 +92,10 @@ supabase link --project-ref your-project-ref
 # Deploy functions
 supabase functions deploy assess-skill
 
-# Set environment variables (see OPENROUTER_SETUP.md for details)
-supabase secrets set OPENROUTER_API_KEY=your_key
-# Optional: Set a specific model (defaults to openai/gpt-3.5-turbo)
-supabase secrets set OPENROUTER_MODEL=openai/gpt-3.5-turbo
+# Set environment variables (see GEMINI_SETUP.md for details)
+supabase secrets set GEMINI_API_KEY=your_key
+# Optional: Set a specific model (defaults to gemini-flash-latest)
+supabase secrets set GEMINI_MODEL=gemini-flash-latest
 ```
 
 6. **Run the development server**
@@ -157,15 +157,15 @@ After completing swaps, users rate each other. Ratings update reputation scores 
 ### Advisory, Not Enforced
 AI helps users self-assess their skill levels but **never makes final decisions**. Users always confirm or override AI suggestions.
 
-### OpenRouter Integration
+### Gemini Integration
 The AI assessment:
 1. Asks 4 structured questions about experience (generated dynamically by AI)
-2. Sends answers to OpenRouter API (supports multiple AI models)
+2. Sends answers to Google Gemini API
 3. Receives suggested level, difficulty, and explanation
 4. User reviews and can modify before saving
 
 ### Fallback Logic
-If OpenRouter API is unavailable, a rule-based assessment provides suggestions.
+If Gemini API is unavailable, a rule-based assessment provides suggestions.
 
 ## ⚖️ Fairness Algorithm
 
@@ -228,7 +228,7 @@ Every table has RLS policies ensuring:
 | Styling | Tailwind CSS 3 |
 | Routing | React Router 6 |
 | Backend | Supabase (Postgres + Auth + Edge Functions) |
-| AI | OpenRouter API (supports multiple models) |
+| AI | Google Gemini API |
 | Language | JavaScript/TypeScript |
 
 ## 📈 Future Enhancements
@@ -252,7 +252,7 @@ MIT License - See LICENSE file for details
 ## 🙏 Acknowledgments
 
 - Supabase for the amazing backend platform
-- OpenRouter for unified AI model access
+- Google Gemini for AI capabilities
 - Tailwind CSS for beautiful styling
 - React team for the incredible framework
 
