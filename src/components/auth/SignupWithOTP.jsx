@@ -304,8 +304,8 @@ export default function SignupWithOTP() {
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     className="input text-center text-2xl tracking-widest"
-                    placeholder="000000"
-                    maxLength="6"
+                    placeholder="00000000"
+                    maxLength="8"
                     required
                   />
                 </div>
