@@ -5,11 +5,22 @@ import SkillEntry from './components/SkillEntry'
 import MySkills from './components/MySkills'
 import MatchExplorer from './components/MatchExplorer'
 import Messages from './components/Messages'
+import Profile from './components/Profile'
+import Login from './components/Login'
 import './App.css'
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [activeView, setActiveView] = useState('onboarding')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+
+  const handleLogin = () => {
+    setIsAuthenticated(true)
+  }
+
+  const handleLogout = () => {
+    setIsAuthenticated(false)
+  }
 
   const renderView = () => {
     switch (activeView) {
@@ -23,11 +34,19 @@ function App() {
         return <MatchExplorer />
       case 'messages':
         return <Messages />
+      case 'profile':
+        return <Profile />
       default:
         return <Dashboard />
     }
   }
 
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />
+  }
+
+  // Show main app if authenticated
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#9AB7CD' }}>
       <Sidebar
@@ -35,6 +54,7 @@ function App() {
         setActiveView={setActiveView}
         isCollapsed={isSidebarCollapsed}
         setIsCollapsed={setIsSidebarCollapsed}
+        onLogout={handleLogout}
       />
       <main
         className={`transition-all duration-300 ${

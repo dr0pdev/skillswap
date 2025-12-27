@@ -1,7 +1,7 @@
-import { LayoutDashboard, BookOpen, Search, MessageSquare, Menu, X, UserPlus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, BookOpen, Search, MessageSquare, Menu, X, UserPlus, ChevronLeft, ChevronRight, User, LogOut } from 'lucide-react'
 import { useState } from 'react'
 
-const Sidebar = ({ activeView, setActiveView, isCollapsed, setIsCollapsed }) => {
+const Sidebar = ({ activeView, setActiveView, isCollapsed, setIsCollapsed, onLogout }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const menuItems = [
@@ -10,6 +10,7 @@ const Sidebar = ({ activeView, setActiveView, isCollapsed, setIsCollapsed }) => 
     { id: 'skills', label: 'My Skills', icon: BookOpen },
     { id: 'explorer', label: 'Match Explorer', icon: Search },
     { id: 'messages', label: 'Messages', icon: MessageSquare },
+    { id: 'profile', label: 'Profile', icon: User },
   ]
 
   const handleMenuClick = (id) => {
@@ -71,7 +72,7 @@ const Sidebar = ({ activeView, setActiveView, isCollapsed, setIsCollapsed }) => 
           </button>
         </div>
         
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 p-4 overflow-y-auto">
           <ul className="space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon
@@ -98,6 +99,22 @@ const Sidebar = ({ activeView, setActiveView, isCollapsed, setIsCollapsed }) => 
             })}
           </ul>
         </nav>
+
+        {/* Logout Button */}
+        <div className="p-4 border-t border-gray-200" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+          <button
+            onClick={onLogout}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-gray-200 hover:bg-white hover:bg-opacity-10 ${
+              isCollapsed ? 'justify-center' : ''
+            }`}
+            title={isCollapsed ? 'Logout' : ''}
+          >
+            <LogOut className="w-5 h-5 flex-shrink-0" />
+            {!isCollapsed && (
+              <span className="font-medium">Logout</span>
+            )}
+          </button>
+        </div>
       </aside>
     </>
   )

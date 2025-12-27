@@ -145,8 +145,8 @@ const MatchExplorer = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900">Match Explorer</h2>
-          <p className="text-gray-500 mt-1">Discover potential skill swap partners with AI-powered fairness scoring</p>
+          <h2 className="text-3xl font-bold text-[#0C243D] mt-1">Match Explorer</h2>
+          <p className="text-[#0C243D] mt-1">Discover potential skill swap partners with AI-powered fairness scoring</p>
         </div>
         <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-slate-700 rounded-lg hover:bg-gray-50 transition-colors">
           <Filter className="w-5 h-5" />

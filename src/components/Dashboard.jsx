@@ -1,4 +1,4 @@
-import { TrendingUp, Users, MessageCircle, Sparkles } from 'lucide-react'
+import { TrendingUp, Users, MessageCircle, Sparkles, Award } from 'lucide-react'
 
 const Dashboard = () => {
   const stats = [
@@ -6,6 +6,7 @@ const Dashboard = () => {
     { label: 'Skills Listed', value: '8', icon: Sparkles, bgColor: 'bg-emerald-50', iconColor: 'text-emerald-600' },
     { label: 'Messages', value: '24', icon: MessageCircle, bgColor: 'bg-blue-50', iconColor: 'text-blue-600' },
     { label: 'Match Rate', value: '85%', icon: TrendingUp, bgColor: 'bg-purple-50', iconColor: 'text-purple-600' },
+    { label: 'Reputation Score', value: '4.8', icon: Award, bgColor: 'bg-amber-50', iconColor: 'text-amber-600', subtitle: 'Based on 3 completed swaps' },
   ]
 
   const recentMatches = [
@@ -17,12 +18,12 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold text-slate-900">Dashboard</h2>
-        <p className="text-gray-500 mt-1">Welcome back! Here's your overview.</p>
+        <h2 className="text-3xl font-bold text-[#0C243D] mt-1">Dashboard</h2>
+        <p className="text-[#0C243D] mt-1">Welcome back! Here's your overview.</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon
           return (
@@ -34,6 +35,9 @@ const Dashboard = () => {
                 <div>
                   <p className="text-sm text-gray-500">{stat.label}</p>
                   <p className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</p>
+                  {stat.subtitle && (
+                    <p className="text-xs text-gray-400 mt-1">{stat.subtitle}</p>
+                  )}
                 </div>
                 <div className={`p-3 rounded-lg ${stat.bgColor}`}>
                   <Icon className={`w-6 h-6 ${stat.iconColor}`} />
