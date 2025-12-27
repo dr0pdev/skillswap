@@ -1,47 +1,70 @@
 import { Search, Send, MoreVertical } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
-const Messages = () => {
-  const [selectedChat, setSelectedChat] = useState(1)
+const Messages = ({ activeConversationId = null, swapRequests = [] }) => {
+  const [selectedChat, setSelectedChat] = useState(activeConversationId || 1)
 
-  const conversations = [
-    {
-      id: 1,
-      name: 'Sarah Chen',
-      avatar: 'SC',
-      lastMessage: 'Sounds great! When would you like to start?',
-      timestamp: '2h ago',
-      unread: 2,
-      isOnline: true,
-    },
-    {
-      id: 2,
-      name: 'Mike Johnson',
-      avatar: 'MJ',
-      lastMessage: 'I can help you with React hooks and state management',
-      timestamp: '5h ago',
-      unread: 0,
-      isOnline: false,
-    },
-    {
-      id: 3,
-      name: 'Emma Wilson',
-      avatar: 'EW',
-      lastMessage: 'Thanks for the session yesterday!',
-      timestamp: '1d ago',
-      unread: 0,
-      isOnline: true,
-    },
-    {
-      id: 4,
-      name: 'David Lee',
-      avatar: 'DL',
-      lastMessage: 'Let me know if you have any questions',
-      timestamp: '2d ago',
-      unread: 1,
-      isOnline: false,
-    },
-  ]
+  // Auto-select conversation if activeConversationId is provided
+  useEffect(() => {
+    if (activeConversationId) {
+      setSelectedChat(activeConversationId)
+    }
+  }, [activeConversationId])
+
+  // Generate conversations from swap requests
+  const generateConversationsFromRequests = () => {
+    const requestConversations = swapRequests
+      .filter(r => r.status === 'accepted' || r.status === 'pending')
+      .map((request) => {
+        const otherPersonId = request.type === 'sent' ? request.toId : request.fromId
+        const otherPersonName = request.type === 'sent' ? request.toName : request.fromName
+        const avatar = otherPersonName.split(' ').map(n => n[0]).join('').toUpperCase()
+        
+        return {
+          id: otherPersonId,
+          name: otherPersonName,
+          avatar: avatar,
+          lastMessage: request.message || `Swap request: ${request.theirSkill} for ${request.yourSkill}`,
+          timestamp: new Date(request.createdAt).toLocaleDateString(),
+          unread: 0,
+          isOnline: Math.random() > 0.5,
+          requestId: request.id,
+          requestStatus: request.status
+        }
+      })
+
+    // Merge with existing conversations and remove duplicates
+    const existingConversations = [
+      {
+        id: 1,
+        name: 'Sarah Chen',
+        avatar: 'SC',
+        lastMessage: 'Sounds great! When would you like to start?',
+        timestamp: '2h ago',
+        unread: 2,
+        isOnline: true,
+      },
+      {
+        id: 2,
+        name: 'Mike Johnson',
+        avatar: 'MJ',
+        lastMessage: 'I can help you with React hooks and state management',
+        timestamp: '5h ago',
+        unread: 0,
+        isOnline: false,
+      },
+    ]
+
+    // Combine and remove duplicates by id
+    const allConversations = [...requestConversations, ...existingConversations]
+    const uniqueConversations = allConversations.filter((conv, index, self) =>
+      index === self.findIndex(c => c.id === conv.id)
+    )
+
+    return uniqueConversations
+  }
+
+  const conversations = generateConversationsFromRequests()
 
   const messages = [
     {
@@ -84,7 +107,7 @@ const Messages = () => {
   const selectedConversation = conversations.find((c) => c.id === selectedChat)
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-12rem)] lg:h-[calc(100vh-8rem)] border border-gray-200 rounded-lg bg-white overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-12rem)] lg:h-[calc(100vh-8rem)] border border-gray-200 rounded-lg overflow-hidden" style={{ backgroundColor: '#F5F7FA' }}>
       {/* Conversations List */}
       <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">

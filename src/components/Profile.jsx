@@ -41,7 +41,7 @@ const Profile = () => {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+      <div className="rounded-lg border border-gray-200 p-6 shadow-sm" style={{ backgroundColor: '#F5F7FA' }}>
         <div className="flex items-center gap-6">
           {/* Avatar */}
           <div className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold text-white" style={{ backgroundColor: '#27496A' }}>
@@ -63,7 +63,8 @@ const Profile = () => {
           return (
             <div
               key={stat.label}
-              className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm"
+              className="rounded-lg border border-gray-200 p-6 shadow-sm"
+              style={{ backgroundColor: '#F5F7FA' }}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -83,7 +84,7 @@ const Profile = () => {
       </div>
 
       {/* Personal Information Box */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+      <div className="rounded-lg border border-gray-200 shadow-sm" style={{ backgroundColor: '#F5F7FA' }}>
         <div className="p-6 border-b border-gray-200 flex items-center justify-between">
           <h3 className="text-xl font-semibold text-slate-900">Personal Information</h3>
           {!isEditing ? (

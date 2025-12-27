@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Search, Filter, Star, MessageCircle, User, ArrowLeftRight, Info } from 'lucide-react'
 import confetti from 'canvas-confetti'
 
-const MatchExplorer = () => {
+const MatchExplorer = ({ onSendSwapRequest, sentRequestIds = [] }) => {
   const [hoveredCard, setHoveredCard] = useState(null)
 
   // User's skills (this would come from user profile in a real app)
@@ -119,6 +119,9 @@ const MatchExplorer = () => {
   }
 
   const handleSendSwapRequest = (matchId) => {
+    const match = matches.find(m => m.id === matchId)
+    if (!match) return
+
     // Trigger confetti effect
     confetti({
       particleCount: 100,
@@ -127,10 +130,10 @@ const MatchExplorer = () => {
       colors: ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b'],
     })
 
-    // Show success message (you could add a toast notification here)
-    setTimeout(() => {
-      alert(`Swap request sent to ${matches.find(m => m.id === matchId)?.name}! 🎉`)
-    }, 500)
+    // Call the parent handler
+    if (onSendSwapRequest) {
+      onSendSwapRequest(match)
+    }
   }
 
   const getFairnessLabel = (score) => {
@@ -160,7 +163,8 @@ const MatchExplorer = () => {
         <input
           type="text"
           placeholder="Search by skill, location, or name..."
-          className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+          className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          style={{ backgroundColor: '#F5F7FA' }}
         />
       </div>
 
@@ -169,7 +173,8 @@ const MatchExplorer = () => {
         {matches.map((match) => (
           <div
             key={match.id}
-            className="relative bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-300"
+            className="relative rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-300"
+            style={{ backgroundColor: '#F5F7FA' }}
             onMouseEnter={() => handleMouseEnter(match.id)}
             onMouseLeave={handleMouseLeave}
           >
@@ -235,15 +240,24 @@ const MatchExplorer = () => {
 
             {/* Actions */}
             <div className="flex gap-2">
-              <button
-                onClick={() => handleSendSwapRequest(match.id)}
-                className="flex-1 px-4 py-2 text-white rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
-                style={{ backgroundColor: '#27496A' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a52'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#27496A'}
-              >
-                <span>Send Swap Request</span>
-              </button>
+              {sentRequestIds.includes(match.id) ? (
+                <button
+                  disabled
+                  className="flex-1 px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed font-medium flex items-center justify-center gap-2"
+                >
+                  <span>Request Sent</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleSendSwapRequest(match.id)}
+                  className="flex-1 px-4 py-2 text-white rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
+                  style={{ backgroundColor: '#27496A' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a52'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#27496A'}
+                >
+                  <span>Send Swap Request</span>
+                </button>
+              )}
               <button className="px-4 py-2 border border-gray-300 text-slate-700 rounded-lg hover:bg-gray-50 transition-colors">
                 <MessageCircle className="w-5 h-5" />
               </button>

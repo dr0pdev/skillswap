@@ -1,7 +1,7 @@
-import { LayoutDashboard, BookOpen, Search, MessageSquare, Menu, X, UserPlus, ChevronLeft, ChevronRight, User, LogOut } from 'lucide-react'
+import { LayoutDashboard, BookOpen, Search, MessageSquare, Menu, X, UserPlus, ChevronLeft, ChevronRight, User, LogOut, Inbox } from 'lucide-react'
 import { useState } from 'react'
 
-const Sidebar = ({ activeView, setActiveView, isCollapsed, setIsCollapsed, onLogout }) => {
+const Sidebar = ({ activeView, setActiveView, isCollapsed, setIsCollapsed, onLogout, unreadNotifications = 0, pendingRequestsCount = 0 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const menuItems = [
@@ -9,7 +9,8 @@ const Sidebar = ({ activeView, setActiveView, isCollapsed, setIsCollapsed, onLog
     { id: 'onboarding', label: 'Skill Onboarding', icon: UserPlus },
     { id: 'skills', label: 'My Skills', icon: BookOpen },
     { id: 'explorer', label: 'Match Explorer', icon: Search },
-    { id: 'messages', label: 'Messages', icon: MessageSquare },
+    { id: 'requests', label: 'Swap Requests', icon: Inbox, badge: pendingRequestsCount },
+    { id: 'messages', label: 'Messages', icon: MessageSquare, badge: unreadNotifications },
     { id: 'profile', label: 'Profile', icon: User },
   ]
 
@@ -91,7 +92,12 @@ const Sidebar = ({ activeView, setActiveView, isCollapsed, setIsCollapsed, onLog
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
                     {!isCollapsed && (
-                      <span className="font-medium">{item.label}</span>
+                      <span className="font-medium flex-1 text-left">{item.label}</span>
+                    )}
+                    {item.badge && item.badge > 0 && (
+                      <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full min-w-[20px] text-center">
+                        {item.badge}
+                      </span>
                     )}
                   </button>
                 </li>

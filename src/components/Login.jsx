@@ -47,7 +47,7 @@ const Login = ({ onLogin }) => {
         </div>
 
         {/* Login Card */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-lg p-8">
+        <div className="rounded-lg border border-gray-200 shadow-lg p-8" style={{ backgroundColor: '#F5F7FA' }}>
           <h2 className="text-2xl font-bold text-slate-900 mb-6">Welcome Back</h2>
           
           <form onSubmit={handleSubmit} className="space-y-6">

@@ -118,7 +118,8 @@ const MySkills = () => {
           {skills.map((skill) => (
             <div
               key={skill.id}
-              className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
+              className="rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
+              style={{ backgroundColor: '#F5F7FA' }}
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
@@ -178,7 +179,7 @@ const MySkills = () => {
 
                   {/* Expanded Assessment Details */}
                   {expandedAssessments[skill.id] && (
-                    <div className="mt-2 p-4 bg-white border border-gray-200 rounded-lg space-y-4">
+                    <div className="mt-2 p-4 border border-gray-200 rounded-lg space-y-4" style={{ backgroundColor: '#F5F7FA' }}>
                       {/* Feedback */}
                       {skill.aiAssessment.feedback.length > 0 && (
                         <div>
@@ -253,7 +254,8 @@ const MySkills = () => {
           {wantedSkills.map((skill) => (
             <div
               key={skill.id}
-              className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
+              className="rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
+              style={{ backgroundColor: '#F5F7FA' }}
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">

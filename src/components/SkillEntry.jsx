@@ -383,7 +383,7 @@ const SkillEntry = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* What I Offer Section */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+        <div className="rounded-lg border border-gray-200 p-6 shadow-sm" style={{ backgroundColor: '#F5F7FA' }}>
           <div className="flex items-center gap-2 mb-6">
             <div className="p-2 bg-indigo-50 rounded-lg">
               <Sparkles className="w-5 h-5 text-indigo-600" />
@@ -526,7 +526,7 @@ const SkillEntry = () => {
 
         {/* AI Assessment Section */}
         {offerSkill.name && offerSkill.experienceLevel && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+          <div className="rounded-lg border border-gray-200 p-6 shadow-sm" style={{ backgroundColor: '#F5F7FA' }}>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-purple-50 rounded-lg">
@@ -744,7 +744,7 @@ const SkillEntry = () => {
         )}
 
         {/* What I Want to Learn Section */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+        <div className="rounded-lg border border-gray-200 p-6 shadow-sm" style={{ backgroundColor: '#F5F7FA' }}>
           <div className="flex items-center gap-2 mb-6">
             <div className="p-2 bg-emerald-50 rounded-lg">
               <Award className="w-5 h-5 text-emerald-600" />
