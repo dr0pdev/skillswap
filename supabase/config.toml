@@ -39,5 +39,5 @@ enable_confirmations = false
 
 # Edge Functions
 [functions.assess-skill]
-verify_jwt = true
+verify_jwt = false  # JWT verification disabled - we handle auth in function code
 

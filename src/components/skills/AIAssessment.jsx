@@ -46,17 +46,58 @@ export default function AIAssessment({ skillName, onComplete, onCancel }) {
         tokenExpiresAt: new Date(session.expires_at * 1000).toISOString()
       })
 
-      // Call Gemini to generate skill-specific questions
-      // Supabase functions.invoke() automatically adds Authorization header from current session
-      const { data, error } = await supabase.functions.invoke('assess-skill', {
-        body: { 
-          skillName, 
-          action: 'generate-questions'
-        }
+      // Get Supabase URL and anon key from environment
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+      // Prepare the Authorization header with JWT token
+      const authHeader = `Bearer ${session.access_token}`
+      
+      console.log('📤 Sending request with JWT:', {
+        url: `${supabaseUrl}/functions/v1/assess-skill`,
+        hasToken: !!session.access_token,
+        tokenLength: session.access_token?.length || 0,
+        tokenPrefix: session.access_token?.substring(0, 20) || 'none',
+        authHeaderPrefix: authHeader.substring(0, 30)
       })
 
+      // Call Edge Function directly with fetch - JWT is sent in Authorization header
+      const response = await fetch(`${supabaseUrl}/functions/v1/assess-skill`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authHeader, // JWT sent here as "Bearer <token>"
+          'apikey': supabaseAnonKey || '',
+        },
+        body: JSON.stringify({
+          skillName,
+          action: 'generate-questions',
+          userId: session.user.id // Include user_id as fallback for verify_jwt=true
+        })
+      })
+
+      let data = null
+      let error = null
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ Edge Function error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText: errorText
+        })
+        try {
+          error = JSON.parse(errorText)
+          console.error('❌ Parsed error:', error)
+        } catch {
+          error = { message: errorText || `HTTP ${response.status}` }
+        }
+      } else {
+        data = await response.json()
+      }
+
       if (error) {
-        console.warn('Failed to get dynamic questions, using fallback:', error)
+        console.warn('⚠️ Failed to get dynamic questions, using fallback:', error)
         setQuestions(getFallbackQuestions())
       } else if (data && data.questions) {
         setQuestions(data.questions)
@@ -209,15 +250,51 @@ export default function AIAssessment({ skillName, onComplete, onCancel }) {
         tokenExpiresAt: new Date(session.expires_at * 1000).toISOString()
       })
 
-      // Try to call Gemini API through Supabase Edge Function for assessment
-      // Supabase functions.invoke() automatically adds Authorization header from current session
-      const { data, error } = await supabase.functions.invoke('assess-skill', {
-        body: { 
-          skillName, 
-          answers,
-          action: 'assess' 
-        }
+      // Get Supabase URL and anon key from environment
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+      // Prepare the Authorization header with JWT token
+      const authHeader = `Bearer ${session.access_token}`
+      
+      console.log('📤 Sending assessment request with JWT:', {
+        url: `${supabaseUrl}/functions/v1/assess-skill`,
+        hasToken: !!session.access_token,
+        tokenLength: session.access_token?.length || 0,
+        tokenPrefix: session.access_token?.substring(0, 20) || 'none',
+        authHeaderPrefix: authHeader.substring(0, 30)
       })
+
+      // Call Edge Function directly with fetch - JWT is sent in Authorization header
+      const response = await fetch(`${supabaseUrl}/functions/v1/assess-skill`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authHeader, // JWT sent here as "Bearer <token>"
+          'apikey': supabaseAnonKey || '',
+        },
+        body: JSON.stringify({
+          skillName,
+          answers,
+          questions, // Send questions back so server can evaluate correctness
+          action: 'assess',
+          userId: session.user.id // Include user_id as fallback for verify_jwt=true
+        })
+      })
+
+      let data = null
+      let error = null
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        try {
+          error = JSON.parse(errorText)
+        } catch {
+          error = { message: errorText || `HTTP ${response.status}` }
+        }
+      } else {
+        data = await response.json()
+      }
 
       if (error) {
         console.warn('Gemini API failed, using fallback:', error)
@@ -253,7 +330,7 @@ export default function AIAssessment({ skillName, onComplete, onCancel }) {
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Generating personalized questions for {skillName}...</p>
-          <p className="text-sm text-gray-500 mt-2">Using Gemini AI to create skill-specific assessment</p>
+          <p className="text-sm text-gray-500 mt-2">Using AI to create skill-specific assessment</p>
         </div>
       </div>
     )
@@ -322,7 +399,7 @@ export default function AIAssessment({ skillName, onComplete, onCancel }) {
       ) : (
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Analyzing your responses with Gemini AI...</p>
+          <p className="text-gray-600">Analyzing your responses with AI...</p>
         </div>
       )}
     </div>

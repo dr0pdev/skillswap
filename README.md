@@ -7,7 +7,7 @@ Skill Swap is an AI-assisted skill exchange platform that fixes the core flaw in
 ## 🎯 Key Features
 
 - **Fair Matching Algorithm**: Calculates skill value based on difficulty, demand, experience level, and reputation
-- **AI Skill Assessment**: Optional Gemini-powered assessment to help users accurately self-report their skill levels
+- **AI Skill Assessment**: Optional AI-powered assessment (via Google Gemini) to help users accurately self-report their skill levels
 - **Transparent Fairness**: Every match includes an explainable fairness score (0-100) and plain-English explanation
 - **Reputation System**: Build trust through completed swaps and peer ratings
 - **Multi-user Swaps**: Support for direct (2-person) and cycle (3+ person) skill exchanges
@@ -24,8 +24,8 @@ Skill Swap is an AI-assisted skill exchange platform that fixes the core flaw in
 ### Backend
 - **Supabase Postgres** - Structured data with RLS policies
 - **Supabase Auth** - Email/password authentication
-- **Supabase Edge Functions** - Serverless Python functions for AI calls
-- **Gemini API** - AI skill assessment (advisory only)
+- **Supabase Edge Functions** - Serverless TypeScript functions for AI calls
+- **Google Gemini API** - AI skill assessment (advisory only)
 
 ### Key Principle
 **No separate backend server** - Everything runs on Supabase infrastructure.
@@ -72,7 +72,6 @@ Create a `.env` file in the root directory:
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-GEMINI_API_KEY=your_gemini_api_key
 ```
 
 4. **Set up database**
@@ -93,8 +92,10 @@ supabase link --project-ref your-project-ref
 # Deploy functions
 supabase functions deploy assess-skill
 
-# Set environment variable
+# Set environment variables (see GEMINI_SETUP.md for details)
 supabase secrets set GEMINI_API_KEY=your_key
+# Optional: Set a specific model (defaults to gemini-flash-latest)
+supabase secrets set GEMINI_MODEL=gemini-flash-latest
 ```
 
 6. **Run the development server**
@@ -158,8 +159,8 @@ AI helps users self-assess their skill levels but **never makes final decisions*
 
 ### Gemini Integration
 The AI assessment:
-1. Asks 4 structured questions about experience
-2. Sends answers to Gemini API
+1. Asks 4 structured questions about experience (generated dynamically by AI)
+2. Sends answers to Google Gemini API
 3. Receives suggested level, difficulty, and explanation
 4. User reviews and can modify before saving
 
