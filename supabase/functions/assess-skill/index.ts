@@ -1,5 +1,5 @@
 // Supabase Edge Function for AI Skill Assessment
-// Uses Gemini API to generate dynamic questions and assess user skill level
+// Uses OpenRouter API to generate dynamic questions and assess user skill level
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -106,21 +106,24 @@ serve(async (req) => {
       )
     }
 
-    // Get Gemini API key from environment (support both uppercase and lowercase)
+    // Get OpenRouter API key from environment (support both uppercase and lowercase)
     // Supabase secrets are accessed via Deno.env.get()
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY') || Deno.env.get('gemini_api_key')
+    const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY') || Deno.env.get('openrouter_api_key')
+    // Optional: specify model (defaults to gpt-3.5-turbo)
+    const openRouterModel = Deno.env.get('OPENROUTER_MODEL') || 'openai/gpt-3.5-turbo'
     
     // Debug logging (remove in production)
     console.log('API Key check:', {
-      hasGEMINI_API_KEY: !!Deno.env.get('GEMINI_API_KEY'),
-      hasgemini_api_key: !!Deno.env.get('gemini_api_key'),
-      hasApiKey: !!geminiApiKey,
+      hasOPENROUTER_API_KEY: !!Deno.env.get('OPENROUTER_API_KEY'),
+      hasopenrouter_api_key: !!Deno.env.get('openrouter_api_key'),
+      hasApiKey: !!openRouterApiKey,
+      model: openRouterModel,
       action: action
     })
     
-    if (!geminiApiKey) {
-      console.log('⚠️ Gemini API key not found in environment variables, using fallback')
-      console.log('Available env vars:', Object.keys(Deno.env.toObject()).filter(k => k.toLowerCase().includes('gemini')))
+    if (!openRouterApiKey) {
+      console.log('⚠️ OpenRouter API key not found in environment variables, using fallback')
+      console.log('Available env vars:', Object.keys(Deno.env.toObject()).filter(k => k.toLowerCase().includes('openrouter')))
       
       // Handle different actions with fallback
       if (action === 'generate-questions') {
@@ -141,7 +144,7 @@ serve(async (req) => {
     if (action === 'generate-questions') {
       // Generate skill-specific questions
       console.log('Generating questions for:', skillName)
-      const questions = await generateQuestionsWithGemini(skillName, geminiApiKey)
+      const questions = await generateQuestionsWithOpenRouter(skillName, openRouterApiKey, openRouterModel)
       return new Response(JSON.stringify(questions), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -159,7 +162,7 @@ serve(async (req) => {
       }
 
       console.log('Assessing skill:', skillName, 'with', Object.keys(answers).length, 'answers')
-      const assessment = await assessSkillWithGemini(skillName, answers, geminiApiKey)
+      const assessment = await assessSkillWithOpenRouter(skillName, answers, openRouterApiKey, openRouterModel)
       return new Response(JSON.stringify(assessment), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -177,7 +180,7 @@ serve(async (req) => {
   }
 })
 
-async function generateQuestionsWithGemini(skillName: string, apiKey: string) {
+async function generateQuestionsWithOpenRouter(skillName: string, apiKey: string, model: string) {
   const prompt = `You are a skill assessment expert. Generate 4 specific, practical questions to assess someone's proficiency in "${skillName}".
 
 Each question should:
@@ -204,28 +207,37 @@ Format your response EXACTLY as JSON:
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
+      'https://openrouter.ai/api/v1/chat/completions',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'HTTP-Referer': 'https://skillswap.app', // Optional: for OpenRouter analytics
+          'X-Title': 'SkillSwap', // Optional: for OpenRouter analytics
+        },
         body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }],
-          generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 1500,
-          }
+          model: model,
+          messages: [
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.8,
+          max_tokens: 1500,
         }),
       }
     )
 
     if (!response.ok) {
-      throw new Error('Gemini API request failed')
+      const errorText = await response.text()
+      console.error('OpenRouter API error:', errorText)
+      throw new Error('OpenRouter API request failed')
     }
 
     const data = await response.json()
-    const text = data.candidates[0]?.content?.parts[0]?.text || ''
+    const text = data.choices?.[0]?.message?.content || ''
     
     // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/)
@@ -234,14 +246,14 @@ Format your response EXACTLY as JSON:
       return parsed
     }
     
-    throw new Error('Could not parse questions from Gemini')
+    throw new Error('Could not parse questions from OpenRouter response')
   } catch (error) {
     console.error('Error generating questions:', error)
     return getFallbackQuestions(skillName)
   }
 }
 
-async function assessSkillWithGemini(skillName: string, answers: any, apiKey: string) {
+async function assessSkillWithOpenRouter(skillName: string, answers: any, apiKey: string, model: string) {
   const prompt = `You are a skill assessment expert. Based on the following answers about "${skillName}", provide an assessment.
 
 User's Answers: ${JSON.stringify(answers, null, 2)}
@@ -258,28 +270,37 @@ EXPLANATION: [explanation]`
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
+      'https://openrouter.ai/api/v1/chat/completions',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'HTTP-Referer': 'https://skillswap.app', // Optional: for OpenRouter analytics
+          'X-Title': 'SkillSwap', // Optional: for OpenRouter analytics
+        },
         body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 500,
-          }
+          model: model,
+          messages: [
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 500,
         }),
       }
     )
 
     if (!response.ok) {
-      throw new Error('Gemini API request failed')
+      const errorText = await response.text()
+      console.error('OpenRouter API error:', errorText)
+      throw new Error('OpenRouter API request failed')
     }
 
     const data = await response.json()
-    const aiText = data.candidates[0]?.content?.parts[0]?.text || ''
+    const aiText = data.choices?.[0]?.message?.content || ''
 
     return parseAIResponse(aiText)
   } catch (error) {

@@ -46,7 +46,7 @@ export default function AIAssessment({ skillName, onComplete, onCancel }) {
         tokenExpiresAt: new Date(session.expires_at * 1000).toISOString()
       })
 
-      // Call Gemini to generate skill-specific questions
+      // Call OpenRouter to generate skill-specific questions
       // Supabase functions.invoke() automatically adds Authorization header from current session
       const { data, error } = await supabase.functions.invoke('assess-skill', {
         body: { 
@@ -124,7 +124,7 @@ export default function AIAssessment({ skillName, onComplete, onCancel }) {
   }
 
   const calculateFallbackAssessment = () => {
-    // Fallback calculation if Gemini fails
+    // Fallback calculation if OpenRouter fails
     let level = 'beginner'
     let difficulty = 30
     let explanation = ''
@@ -209,7 +209,7 @@ export default function AIAssessment({ skillName, onComplete, onCancel }) {
         tokenExpiresAt: new Date(session.expires_at * 1000).toISOString()
       })
 
-      // Try to call Gemini API through Supabase Edge Function for assessment
+      // Try to call OpenRouter API through Supabase Edge Function for assessment
       // Supabase functions.invoke() automatically adds Authorization header from current session
       const { data, error } = await supabase.functions.invoke('assess-skill', {
         body: { 
@@ -220,7 +220,7 @@ export default function AIAssessment({ skillName, onComplete, onCancel }) {
       })
 
       if (error) {
-        console.warn('Gemini API failed, using fallback:', error)
+        console.warn('OpenRouter API failed, using fallback:', error)
         await new Promise(resolve => setTimeout(resolve, 1000))
         const assessment = calculateFallbackAssessment()
         setLoading(false)
@@ -253,7 +253,7 @@ export default function AIAssessment({ skillName, onComplete, onCancel }) {
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Generating personalized questions for {skillName}...</p>
-          <p className="text-sm text-gray-500 mt-2">Using Gemini AI to create skill-specific assessment</p>
+          <p className="text-sm text-gray-500 mt-2">Using AI to create skill-specific assessment</p>
         </div>
       </div>
     )
@@ -322,7 +322,7 @@ export default function AIAssessment({ skillName, onComplete, onCancel }) {
       ) : (
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Analyzing your responses with Gemini AI...</p>
+          <p className="text-gray-600">Analyzing your responses with AI...</p>
         </div>
       )}
     </div>
