@@ -1,75 +1,118 @@
-import { useState, useEffect } from 'react'
-import { supabase, isSupabaseConfigured } from './lib/supabase'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from './contexts/AuthContext'
+import { ToastProvider } from './contexts/ToastContext'
+import ErrorBoundary from './components/ErrorBoundary'
+import ProtectedRoute from './components/ProtectedRoute'
+import Layout from './components/layout/Layout'
+
+// Auth pages
+import Login from './components/auth/Login'
+import Signup from './components/auth/SignupWithOTP' // Using OTP-based signup
+import AuthCallback from './components/auth/AuthCallback'
+
+// App pages
+import Dashboard from './pages/Dashboard'
+import Skills from './pages/Skills'
+import Browse from './pages/Browse'
+import ProposeSwap from './pages/ProposeSwap'
+import FindSwaps from './pages/FindSwaps'
+import MySwaps from './pages/MySwaps'
+import Profile from './pages/Profile'
+
 import './App.css'
 
 function App() {
-  const [loading, setLoading] = useState(true)
-  const [connected, setConnected] = useState(false)
-
-  useEffect(() => {
-    // Check if Supabase is configured
-    const checkConnection = async () => {
-      const configured = isSupabaseConfigured()
-      
-      // Debug logging (remove in production)
-      console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Not set')
-      console.log('Supabase Key:', (import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY) ? 'Set' : 'Not set')
-      console.log('Is configured:', configured)
-      
-      if (configured) {
-        // Try a simple connection test
-        try {
-          // Just check if we can access the Supabase instance
-          // This won't fail even if tables don't exist
-          await supabase.auth.getSession()
-          setConnected(true)
-        } catch (err) {
-          console.warn('Supabase connection test failed:', err)
-          // If configured but connection fails, still show as configured
-          // (might be network issue or wrong credentials)
-          setConnected(true)
-        }
-      } else {
-        setConnected(false)
-      }
-      
-      setLoading(false)
-    }
-
-    checkConnection()
-  }, [])
-
-  if (loading) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <div className="card">Loading...</div>
-      </div>
-    )
-  }
-
   return (
-    <>
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h1>React + Supabase</h1>
-        <div className="card">
-          <p>
-            {connected ? (
-              <span style={{ color: 'green' }}>✓ Supabase configured</span>
-            ) : (
-              <span style={{ color: 'orange' }}>
-              ⚠ Please configure your Supabase credentials in <code>.env</code>
-            </span>
-            )}
-          </p>
-          <p>
-            Edit <code>src/App.jsx</code> to start building your app
-          </p>
-          <p className="read-the-docs">
-            Supabase client is available via: <code>import {'{'} supabase {'}'} from './lib/supabase'</code>
-          </p>
-        </div>
-      </div>
-    </>
+    <ErrorBoundary>
+      <Router>
+        <AuthProvider>
+          <ToastProvider>
+            <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+
+          {/* Protected routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Dashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/skills"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Skills />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/browse"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Browse />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/propose-swap"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ProposeSwap />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/find-swaps"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <FindSwaps />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-swaps"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <MySwaps />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Profile />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Default redirect */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </ToastProvider>
+    </AuthProvider>
+  </Router>
+</ErrorBoundary>
   )
 }
 

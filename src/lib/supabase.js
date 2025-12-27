@@ -25,7 +25,16 @@ let client
 
 try {
   if (isSupabaseConfigured()) {
-    client = createClient(supabaseUrl, supabaseAnonKey)
+    client = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        storage: window.localStorage,
+        storageKey: 'skillswap-auth',
+        flowType: 'pkce'
+      }
+    })
   } else {
     // Provide minimal valid inputs to prevent errors
     // These won't work but will allow the app to run
