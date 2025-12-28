@@ -123,8 +123,8 @@ export default function Skills() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="section-title">My Skills</h1>
-          <p className="section-subtitle">
+          <h1 className="section-title text-[#0C243D] mt-1">My Skills</h1>
+          <p className="section-subtitle text-[#0C243D] mt-1">
             Manage what you can teach and want to learn
           </p>
         </div>
@@ -141,40 +141,40 @@ export default function Skills() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="card-glass">
+        <div className="relative overflow-hidden rounded-xl p-6 border border-gray-200 shadow-lg" style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(99, 102, 241, 0.15) 100%)' }}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-dark-400">Total Skills</p>
-              <p className="text-3xl font-bold text-dark-100 mt-1">{skills.length}</p>
+              <p className="text-xs font-semibold text-[#0C243D] mt-1 uppercase tracking-wider mb-2 ">Total Skills</p>
+              <p className="text-3xl font-bold text-gray-900">{skills.length}</p>
             </div>
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-600/20 to-accent-600/20 flex items-center justify-center">
-              <svg className="w-6 h-6 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-12 h-12 rounded-lg bg-indigo-100 flex items-center justify-center">
+              <svg className="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
           </div>
         </div>
-        <div className="card-glass">
+        <div className="relative overflow-hidden rounded-xl p-6 border border-gray-200 shadow-lg" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.15) 100%)' }}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-dark-400">Teaching</p>
-              <p className="text-3xl font-bold text-primary-400 mt-1">{teachingSkills.length}</p>
+              <p className="text-xs font-semibold text-[#0C243D] mt-1 uppercase tracking-wider mb-2">Teaching</p>
+              <p className="text-3xl font-bold text-gray-900">{teachingSkills.length}</p>
             </div>
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-600/20 to-primary-800/20 flex items-center justify-center">
-              <svg className="w-6 h-6 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+              <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
           </div>
         </div>
-        <div className="card-glass">
+        <div className="relative overflow-hidden rounded-xl p-6 border border-gray-200 shadow-lg" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.15) 100%)' }}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-dark-400">Learning</p>
-              <p className="text-3xl font-bold text-accent-400 mt-1">{learningSkills.length}</p>
+              <p className="text-xs font-semibold text-[#0C243D] mt-1 uppercase tracking-wider mb-2">Learning</p>
+              <p className="text-3xl font-bold text-gray-900">{learningSkills.length}</p>
             </div>
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent-600/20 to-accent-800/20 flex items-center justify-center">
-              <svg className="w-6 h-6 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center">
+              <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
             </div>
@@ -186,13 +186,13 @@ export default function Skills() {
       <div className="flex gap-2 border-b border-dark-800">
         <button
           onClick={() => setFilter('all')}
-          className={`tab ${filter === 'all' ? 'tab-active' : ''}`}
+          className={`tab text-[#0C243D] mt-1 ${filter === 'all' ? 'tab-active' : ''}`}
         >
           All Skills ({skills.length})
         </button>
         <button
           onClick={() => setFilter('teach')}
-          className={`tab ${filter === 'teach' ? 'tab-active' : ''}`}
+          className={`tab text-[#0C243D] mt-1${filter === 'teach' ? 'tab-active' : ''}`}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -201,7 +201,7 @@ export default function Skills() {
         </button>
         <button
           onClick={() => setFilter('learn')}
-          className={`tab ${filter === 'learn' ? 'tab-active' : ''}`}
+          className={`tab text-[#0C243D] mt-1 ${filter === 'learn' ? 'tab-active' : ''}`}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />

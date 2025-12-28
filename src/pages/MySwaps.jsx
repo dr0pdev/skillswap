@@ -290,7 +290,7 @@ export default function MySwaps() {
               : `You don't have any ${filter} swaps.`}
           </p>
           {filter === 'all' && (
-            <a href="/find-swaps" className="btn btn-primary">
+            <a href="/find-swaps" className="btn btn-primary text-[#0C243D] mt-1">
               Find Swaps
             </a>
           )}
@@ -302,7 +302,7 @@ export default function MySwaps() {
               <div className="flex flex-col lg:flex-row justify-between gap-4 mb-4">
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-[#0C243D] mt-1">
                       Swap with {swap.learning_from?.full_name || 'Partner'}
                     </h3>
                     {getStatusBadge(swap.swaps.status)}
