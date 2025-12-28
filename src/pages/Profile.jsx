@@ -97,17 +97,16 @@ export default function Profile() {
         throw uploadError
       }
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('verification-documents')
-        .getPublicUrl(fileName)
+      // Store the file path (not public URL, since bucket is private)
+      // We'll generate signed URLs when needed
+      const storagePath = fileName
 
       // Update user record with verification info
       const { error: updateError } = await supabase
         .from('users')
         .update({
           verification_status: 'pending',
-          verification_document_url: publicUrl,
+          verification_document_url: storagePath, // Store path, not URL
           verification_document_type: documentType,
           verification_submitted_at: new Date().toISOString()
         })

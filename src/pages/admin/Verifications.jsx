@@ -115,6 +115,74 @@ export default function Verifications() {
     return type === 'cnic' ? 'CNIC' : 'Student ID'
   }
 
+  const handleViewDocument = async (documentPathOrUrl) => {
+    try {
+      console.log('Document path/URL:', documentPathOrUrl)
+
+      // Check if it's already a full URL (old format)
+      if (documentPathOrUrl.startsWith('http://') || documentPathOrUrl.startsWith('https://')) {
+        console.log('Opening existing URL')
+        
+        // If it's a public URL, try to convert to signed URL
+        if (documentPathOrUrl.includes('/storage/v1/object/public/')) {
+          // Extract the path from the public URL
+          const match = documentPathOrUrl.match(/\/storage\/v1\/object\/public\/verification-documents\/(.+)/)
+          if (match && match[1]) {
+            const filePath = match[1]
+            console.log('Extracted file path:', filePath)
+            
+            // Generate signed URL for private access
+            const { data, error } = await supabase.storage
+              .from('verification-documents')
+              .createSignedUrl(filePath, 3600)
+
+            if (error) {
+              console.error('Error creating signed URL:', error)
+              // Fallback: try opening the original URL
+              window.open(documentPathOrUrl, '_blank', 'noopener,noreferrer')
+              return
+            }
+
+            if (data?.signedUrl) {
+              window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+            } else {
+              window.open(documentPathOrUrl, '_blank', 'noopener,noreferrer')
+            }
+          } else {
+            // Can't parse, just open it
+            window.open(documentPathOrUrl, '_blank', 'noopener,noreferrer')
+          }
+        } else {
+          // Not a storage URL, just open it
+          window.open(documentPathOrUrl, '_blank', 'noopener,noreferrer')
+        }
+      } else {
+        // It's a file path (new format), generate signed URL
+        console.log('Generating signed URL for path:', documentPathOrUrl)
+        
+        const { data, error } = await supabase.storage
+          .from('verification-documents')
+          .createSignedUrl(documentPathOrUrl, 3600) // Valid for 1 hour
+
+        if (error) {
+          console.error('Error creating signed URL:', error)
+          alert('Error loading document: ' + error.message)
+          return
+        }
+
+        if (data?.signedUrl) {
+          console.log('Opening signed URL')
+          window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+        } else {
+          alert('Unable to generate document URL')
+        }
+      }
+    } catch (error) {
+      console.error('Error viewing document:', error)
+      alert('Error viewing document: ' + error.message)
+    }
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -258,19 +326,18 @@ export default function Verifications() {
                     </td>
                     <td className="py-4 px-4">
                       {request.verification_document_url ? (
-                        <a
-                          href={request.verification_document_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary-400 hover:text-primary-300 text-sm flex items-center gap-1"
+                        <button
+                          onClick={() => handleViewDocument(request.verification_document_url)}
+                          className="text-primary-400 hover:text-primary-300 text-sm flex items-center gap-1 hover:underline"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
-                          View
-                        </a>
+                          View Document
+                        </button>
                       ) : (
-                        <span className="text-dark-500 text-sm">-</span>
+                        <span className="text-dark-500 text-sm">No document</span>
                       )}
                     </td>
                     <td className="py-4 px-4">
