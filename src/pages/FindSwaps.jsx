@@ -399,6 +399,14 @@ export default function FindSwaps() {
                       <p className="text-sm text-gray-600 mt-1">
                         Level: {match.you_teach.level} • Available: {match.myTeachCapacity?.remainingHours || 0}h/week
                       </p>
+                      {match.you_teach.ai_explanation && (
+                        <div className="mt-2 pt-2 border-t border-blue-200">
+                          <p className="text-xs font-medium text-blue-700 mb-1">Your Expertise:</p>
+                          <p className="text-xs text-gray-700 leading-relaxed">
+                            {match.you_teach.ai_explanation}
+                          </p>
+                        </div>
+                      )}
                       <p className="text-xs text-gray-500 mt-2">
                         Value: {match.you_give_value.toFixed(0)} points
                       </p>
@@ -414,6 +422,14 @@ export default function FindSwaps() {
                       <p className="text-sm text-gray-600 mt-1">
                         Level: {match.they_teach.level} • Available: {match.theirTeachCapacity?.remainingHours || 0}h/week
                       </p>
+                      {match.they_teach.ai_explanation && (
+                        <div className="mt-2 pt-2 border-t border-purple-200">
+                          <p className="text-xs font-medium text-purple-700 mb-1">Their Expertise:</p>
+                          <p className="text-xs text-gray-700 leading-relaxed">
+                            {match.they_teach.ai_explanation}
+                          </p>
+                        </div>
+                      )}
                       <p className="text-xs text-gray-500 mt-2">
                         Value: {match.you_receive_value.toFixed(0)} points
                       </p>

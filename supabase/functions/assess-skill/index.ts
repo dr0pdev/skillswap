@@ -233,11 +233,11 @@ serve(async (req) => {
 
     // Handle different actions
     if (action === 'generate-questions') {
-      // Generate skill-specific technical questions using AI
-      console.log('🤖 Generating AI-powered technical questions for:', skillName)
+      // Generate skill-specific general knowledge questions using AI
+      console.log('🤖 Generating AI-powered general knowledge questions for:', skillName)
       try {
         const questions = await generateQuestionsWithGemini(skillName, geminiApiKey, geminiModel)
-        console.log('✅ Successfully generated', questions.questions?.length || 0, 'AI technical questions')
+        console.log('✅ Successfully generated', questions.questions?.length || 0, 'AI general knowledge questions')
         return new Response(JSON.stringify(questions), {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -278,8 +278,8 @@ serve(async (req) => {
         }
       }
 
-      console.log('🔍 Assessing skill:', skillName, 'with', Object.keys(answers).length, 'answers')
-      console.log('📝 Evaluating correctness of technical answers...')
+      console.log('🔍 Assessing skill:', skillName, 'with', Object.keys(answers).length, 'text responses')
+      console.log('📝 Analyzing text responses and creating summary...')
       
       const assessment = await assessSkillWithGemini(skillName, answers, geminiApiKey, geminiModel, questionsToUse)
     return new Response(JSON.stringify(assessment), {
@@ -300,78 +300,94 @@ serve(async (req) => {
 })
 
 async function generateQuestionsWithGemini(skillName: string, apiKey: string, model: string) {
-  const prompt = `You are an expert technical assessor for "${skillName}". Create 4 technical questions that test actual knowledge and proficiency, NOT self-reported experience.
+  const prompt = `You are a skill assessment expert. Create 3-4 relevant, open-ended questions that help understand the user's knowledge and experience with "${skillName}".
 
 CRITICAL REQUIREMENTS:
-1. Questions must be TECHNICAL and SPECIFIC to "${skillName}" - test actual knowledge
-2. Questions should progress: Q1 (basic concepts) → Q2 (intermediate) → Q3 (advanced) → Q4 (expert)
-3. Each question must have exactly 4 multiple-choice options
-4. ONE option is the CORRECT answer (indicated by "correct": true)
-5. Other options should be plausible but incorrect (common mistakes, misconceptions, or less optimal answers)
-6. Questions should test:
-   - Q1: Core concepts, fundamentals, basic syntax/terminology
-   - Q2: Practical usage, common patterns, standard practices
-   - Q3: Problem-solving, optimization, edge cases
-   - Q4: Advanced techniques, best practices, architectural decisions
+1. Questions MUST be RELEVANT and SPECIFIC to "${skillName}" - adapt them based on what type of skill it is:
+   - For SPORTS/PHYSICAL ACTIVITIES (like badminton, tennis, yoga): Ask about playing experience, techniques, training, matches/competitions
+   - For TECHNICAL SKILLS (like programming, design): Ask about projects, tools used, problem-solving
+   - For LANGUAGES: Ask about speaking ability, practice, conversations, reading/writing
+   - For CREATIVE SKILLS (like music, art, writing): Ask about creations, style, practice, inspiration
+   - For ACADEMIC/PROFESSIONAL SKILLS: Ask about application, experience, depth of knowledge
+   - For OTHER SKILLS: Adapt questions appropriately to the skill type
 
-EXAMPLES OF GOOD QUESTIONS:
-- "What is the primary purpose of [concept] in ${skillName}?"
-- "Which approach is most efficient for [scenario] in ${skillName}?"
-- "How would you handle [problem] when working with ${skillName}?"
-- "What is the best practice for [situation] in ${skillName}?"
+2. Questions should be OPEN-ENDED and encourage detailed written responses (not yes/no or multiple choice)
+3. Questions should cover different aspects relevant to "${skillName}":
+   - Overall understanding and familiarity with the skill
+   - Practical experience and hands-on practice
+   - Depth of knowledge and proficiency level
+   - Ability to teach or explain to others
+4. Questions should be conversational, natural, and easy to understand
+5. NO generic questions that could apply to any skill - they must be tailored to "${skillName}"
+
+EXAMPLES FOR DIFFERENT SKILL TYPES:
+
+For SPORTS (e.g., "badminton"):
+- "Describe your experience playing badminton. How long have you been playing and what level do you play at?"
+- "What badminton techniques and skills are you most comfortable with? (e.g., serves, smashes, footwork)"
+- "Have you participated in any badminton matches, tournaments, or regular games? Describe your experience."
+- "How would you help someone learn badminton? What would you focus on teaching first?"
+
+For TECHNICAL SKILLS (e.g., "Python"):
+- "Describe your experience with Python. What types of projects have you worked on?"
+- "What Python concepts and libraries are you most familiar with?"
+- "Share an example of a problem you solved using Python."
+- "How would you explain Python to someone new to programming?"
+
+For LANGUAGES (e.g., "Spanish"):
+- "Describe your Spanish speaking ability. How comfortable are you having conversations?"
+- "What contexts have you used Spanish in? (travel, work, study, etc.)"
+- "How would you rate your reading and writing skills in Spanish?"
+- "How would you help someone learn Spanish? What approach would you take?"
+
+For CREATIVE SKILLS (e.g., "guitar"):
+- "Describe your experience playing guitar. What styles or genres do you play?"
+- "What guitar techniques are you comfortable with? (chords, fingerpicking, soloing, etc.)"
+- "Have you performed or recorded music? Share your experience."
+- "How would you teach someone to play guitar? What would you start with?"
 
 EXAMPLES OF BAD QUESTIONS (DO NOT USE):
-- "How long have you been using ${skillName}?"
-- "How many projects have you completed?"
-- "How comfortable are you with ${skillName}?"
+- Generic questions that don't relate to "${skillName}" specifically
+- Questions that assume "${skillName}" is something it's not (e.g., asking about "building" or "coding" for a sport)
+- "How long have you been using ${skillName}?" (too specific/numeric)
+- "Rate your skill level from 1-10" (numeric rating)
+- Questions that are irrelevant to the skill type
 
 You MUST respond with ONLY valid JSON, no markdown, no explanations. Format EXACTLY as:
 {
   "questions": [
     {
       "id": "q1",
-      "question": "Technical question testing basic knowledge of ${skillName}?",
-      "options": [
-        {"value": "opt1", "label": "Correct answer (basic level)", "correct": true},
-        {"value": "opt2", "label": "Incorrect option (common mistake)"},
-        {"value": "opt3", "label": "Incorrect option"},
-        {"value": "opt4", "label": "Incorrect option"}
-      ]
+      "question": "Relevant question about understanding/experience with ${skillName}",
+      "type": "text",
+      "placeholder": "Type your response here..."
     },
     {
       "id": "q2",
-      "question": "Technical question testing intermediate knowledge of ${skillName}?",
-      "options": [
-        {"value": "opt1", "label": "Incorrect option"},
-        {"value": "opt2", "label": "Correct answer (intermediate level)", "correct": true},
-        {"value": "opt3", "label": "Incorrect option"},
-        {"value": "opt4", "label": "Incorrect option"}
-      ]
+      "question": "Relevant question about practical experience with ${skillName}",
+      "type": "text",
+      "placeholder": "Share your experience..."
     },
     {
       "id": "q3",
-      "question": "Technical question testing advanced knowledge of ${skillName}?",
-      "options": [
-        {"value": "opt1", "label": "Incorrect option"},
-        {"value": "opt2", "label": "Incorrect option"},
-        {"value": "opt3", "label": "Correct answer (advanced level)", "correct": true},
-        {"value": "opt4", "label": "Incorrect option"}
-      ]
+      "question": "Relevant question about proficiency/techniques in ${skillName}",
+      "type": "text",
+      "placeholder": "Describe your skills..."
     },
     {
       "id": "q4",
-      "question": "Technical question testing expert-level knowledge of ${skillName}?",
-      "options": [
-        {"value": "opt1", "label": "Incorrect option"},
-        {"value": "opt2", "label": "Incorrect option"},
-        {"value": "opt3", "label": "Incorrect option"},
-        {"value": "opt4", "label": "Correct answer (expert level)", "correct": true}
-      ]
+      "question": "Relevant question about teaching/explaining ${skillName}",
+      "type": "text",
+      "placeholder": "Explain how you would teach this..."
     }
   ]
 }
 
-IMPORTANT: Make questions technical and specific to "${skillName}". Test actual knowledge, not experience.`
+IMPORTANT: 
+- Make questions SPECIFIC and RELEVANT to "${skillName}"
+- Consider what type of skill "${skillName}" is and adapt questions accordingly
+- Questions should feel natural and appropriate for someone assessing their ability in "${skillName}"
+- Avoid generic or irrelevant questions`
 
   try {
     const response = await fetch(
@@ -461,97 +477,59 @@ IMPORTANT: Make questions technical and specific to "${skillName}". Test actual 
 }
 
 async function assessSkillWithGemini(skillName: string, answers: any, apiKey: string, model: string, questions: any[]) {
-  // First, evaluate correctness of answers (if questions have correct answers marked)
-  const questionAnswers = questions.map((q: any, index: number) => {
-    const userAnswer = answers[q.id]
-    const correctOption = q.options?.find((opt: any) => opt.correct === true)
-    const hasCorrectAnswer = correctOption !== undefined
-    const isCorrect = hasCorrectAnswer ? userAnswer === correctOption?.value : null
-    
-    // Determine difficulty based on question ID or position
-    let difficulty = 'intermediate'
-    if (q.id === 'q1' || index === 0) difficulty = 'basic'
-    else if (q.id === 'q2' || index === 1) difficulty = 'intermediate'
-    else if (q.id === 'q3' || index === 2) difficulty = 'advanced'
-    else if (q.id === 'q4' || index === 3) difficulty = 'expert'
-    
+  // Map questions to user answers for text-based assessment
+  const questionAnswers = questions.map((q: any) => {
+    const userAnswer = answers[q.id] || ''
     return {
       questionId: q.id,
       question: q.question,
-      userAnswer,
-      correctAnswer: correctOption?.value || null,
-      isCorrect,
-      hasCorrectAnswer,
-      difficulty
+      userAnswer: userAnswer.trim()
     }
   })
-  
-  // Check if we have questions with correct answers (technical questions) or not (experience-based)
-  const hasTechnicalQuestions = questionAnswers.some((qa: any) => qa.hasCorrectAnswer)
 
-  // Build assessment prompt based on question type
-  let prompt = ''
-  
-  if (hasTechnicalQuestions) {
-    // Technical questions with correct answers - evaluate based on correctness
-    const correctCount = questionAnswers.filter((qa: any) => qa.isCorrect === true).length
-    const correctBasic = questionAnswers.find((qa: any) => qa.difficulty === 'basic' && qa.isCorrect === true)
-    const correctIntermediate = questionAnswers.find((qa: any) => qa.difficulty === 'intermediate' && qa.isCorrect === true)
-    const correctAdvanced = questionAnswers.find((qa: any) => qa.difficulty === 'advanced' && qa.isCorrect === true)
-    const correctExpert = questionAnswers.find((qa: any) => qa.difficulty === 'expert' && qa.isCorrect === true)
+  // Build assessment prompt for text-based responses
+  const prompt = `You are an expert skill assessor. Analyze the following written responses from a user about their knowledge and experience with "${skillName}".
 
-    prompt = `You are a technical skill assessment expert. Evaluate the user's performance on a TECHNICAL KNOWLEDGE assessment for "${skillName}".
-
-ASSESSMENT RESULTS:
-- Total Questions: ${questions.length}
-- Correct Answers: ${correctCount}/${questions.length}
-- Basic Question: ${correctBasic ? 'CORRECT ✓' : 'INCORRECT ✗'}
-- Intermediate Question: ${correctIntermediate ? 'CORRECT ✓' : 'INCORRECT ✗'}
-- Advanced Question: ${correctAdvanced ? 'CORRECT ✓' : 'INCORRECT ✗'}
-- Expert Question: ${correctExpert ? 'CORRECT ✓' : 'INCORRECT ✗'}
-
-DETAILED ANSWERS:
+USER'S RESPONSES:
 ${questionAnswers.map((qa: any) => `
 Question: ${qa.question}
-User's Answer: ${qa.userAnswer}
-Correct Answer: ${qa.correctAnswer || 'N/A'}
-Result: ${qa.isCorrect === true ? 'CORRECT ✓' : qa.isCorrect === false ? 'INCORRECT ✗' : 'N/A'}
-Difficulty: ${qa.difficulty}
+User's Response: ${qa.userAnswer || '(No response provided)'}
 `).join('\n')}
 
-Based on their TECHNICAL KNOWLEDGE demonstrated through these answers, assess their skill level:
+TASK:
+1. Read and understand all the user's responses
+2. Create a comprehensive summary of their knowledge, experience, and expertise level
+3. Assess their overall skill level based on:
+   - Depth of understanding demonstrated in their responses
+   - Practical experience mentioned
+   - Clarity and accuracy of explanations
+   - Confidence and expertise indicators
+4. Assign a skill level and difficulty score
 
 EVALUATION CRITERIA:
-- Beginner (0-40): Can answer basic technical questions correctly, struggles with intermediate+
-- Intermediate (41-70): Can answer basic and intermediate technical questions, some advanced knowledge
-- Advanced (71-90): Can answer most technical questions correctly, demonstrates strong technical knowledge
-- Expert (91-100): Answers all or nearly all technical questions correctly, shows expert-level understanding
+- Beginner (0-40): Basic understanding, limited experience, can describe concepts at a high level but lacks depth
+- Intermediate (41-70): Good understanding, some practical experience, can explain concepts clearly and has worked on projects
+- Advanced (71-90): Strong understanding, significant experience, demonstrates deep knowledge and can teach others
+- Expert (91-100): Exceptional understanding, extensive experience, shows mastery and can mentor others
 
-Provide your assessment:
-1. Skill Level: Choose ONE from [beginner, intermediate, advanced]
-2. Difficulty Score: A number from 0-100 based on correctness and question difficulty
-3. Brief Explanation: 2-3 sentences explaining your assessment based on their technical answers
-
-Format your response EXACTLY as:
-LEVEL: [level]
-DIFFICULTY: [number]
-EXPLANATION: [explanation]`
-  } else {
-    // Experience-based questions (fallback) - assess based on self-reported experience
-    prompt = `You are a skill assessment expert. Based on the following self-reported answers about "${skillName}", provide an assessment.
-
-User's Answers: ${JSON.stringify(answers, null, 2)}
-
-Analyze their responses and provide:
-1. Skill Level: Choose ONE from [beginner, intermediate, advanced]
-2. Difficulty Score: A number from 0-100 representing their mastery
-3. Brief Explanation: 2-3 sentences explaining your assessment
+ASSESSMENT PROCESS:
+1. Summarize their responses in 2-3 sentences highlighting key points
+2. Evaluate the depth and quality of their knowledge based on their written responses
+3. Determine skill level (beginner/intermediate/advanced)
+4. Assign difficulty score (0-100) based on demonstrated expertise
+5. Provide a brief explanation of your assessment
 
 Format your response EXACTLY as:
-LEVEL: [level]
-DIFFICULTY: [number]
-EXPLANATION: [explanation]`
-  }
+SUMMARY: [2-3 sentence summary of their knowledge and experience]
+LEVEL: [beginner/intermediate/advanced]
+DIFFICULTY: [number between 0-100]
+EXPLANATION: [2-3 sentences explaining why you assigned this level and score]
+
+Be fair and accurate. Consider both what they say and how they say it. Look for indicators of:
+- Actual understanding vs. surface-level knowledge
+- Real experience vs. theoretical knowledge
+- Ability to explain concepts clearly
+- Confidence and depth of responses`
 
   try {
     const response = await fetch(
@@ -569,7 +547,7 @@ EXPLANATION: [explanation]`
           }],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 500,
+            maxOutputTokens: 1000, // Increased for summary and detailed assessment
           }
         }),
       }
@@ -603,58 +581,136 @@ EXPLANATION: [explanation]`
 }
 
 function getFallbackQuestions(skillName: string) {
-  return {
-    questions: [
+  // Detect skill type from name (simple heuristic)
+  const skillLower = skillName.toLowerCase()
+  const isSport = ['badminton', 'tennis', 'basketball', 'soccer', 'football', 'volleyball', 'swimming', 'yoga', 'gym', 'fitness', 'running', 'cycling', 'dancing', 'martial', 'karate', 'boxing'].some(s => skillLower.includes(s))
+  const isLanguage = ['spanish', 'french', 'german', 'chinese', 'japanese', 'korean', 'italian', 'portuguese', 'russian', 'arabic', 'hindi'].some(s => skillLower.includes(s))
+  const isCreative = ['music', 'guitar', 'piano', 'singing', 'art', 'drawing', 'painting', 'photography', 'writing', 'poetry'].some(s => skillLower.includes(s))
+  
+  let questions = []
+  
+  if (isSport) {
+    questions = [
       {
-        id: 'experience',
-        question: `How long have you been practicing ${skillName}?`,
-        options: [
-          { value: 'less-than-6-months', label: 'Less than 6 months' },
-          { value: '6-months-to-2-years', label: '6 months to 2 years' },
-          { value: '2-to-5-years', label: '2 to 5 years' },
-          { value: 'more-than-5-years', label: 'More than 5 years' },
-        ],
+        id: 'q1',
+        question: `Describe your experience with ${skillName}. How long have you been practicing and what level do you play at?`,
+        type: 'text',
+        placeholder: 'Share your playing experience and skill level...',
       },
       {
-        id: 'projects',
-        question: `How many projects or real-world applications have you completed with ${skillName}?`,
-        options: [
-          { value: 'none', label: 'None yet, still learning basics' },
-          { value: '1-3', label: '1-3 projects' },
-          { value: '4-10', label: '4-10 projects' },
-          { value: 'more-than-10', label: 'More than 10 projects' },
-        ],
+        id: 'q2',
+        question: `What ${skillName} techniques and skills are you most comfortable with?`,
+        type: 'text',
+        placeholder: 'Describe the techniques you can perform...',
       },
       {
-        id: 'comfort',
-        question: `How comfortable are you teaching ${skillName} to others?`,
-        options: [
-          { value: 'beginner', label: 'I can teach basic concepts' },
-          { value: 'intermediate', label: 'I can teach intermediate techniques' },
-          { value: 'advanced', label: 'I can teach advanced topics and best practices' },
-          { value: 'expert', label: 'I can mentor at a professional level' },
-        ],
+        id: 'q3',
+        question: `Have you participated in any ${skillName} matches, competitions, or regular practice sessions? Describe your experience.`,
+        type: 'text',
+        placeholder: 'Share your competitive or practice experience...',
       },
       {
-        id: 'time',
-        question: `How often do you currently use ${skillName}?`,
-        options: [
-          { value: 'rarely', label: 'Rarely / Not recently' },
-          { value: 'monthly', label: 'A few times a month' },
-          { value: 'weekly', label: 'Weekly' },
-          { value: 'daily', label: 'Daily or near-daily' },
-        ],
+        id: 'q4',
+        question: `How would you help someone learn ${skillName}? What would you focus on teaching first?`,
+        type: 'text',
+        placeholder: 'Explain your teaching approach...',
       },
-    ],
+    ]
+  } else if (isLanguage) {
+    questions = [
+      {
+        id: 'q1',
+        question: `Describe your ${skillName} speaking ability. How comfortable are you having conversations?`,
+        type: 'text',
+        placeholder: 'Share your speaking proficiency...',
+      },
+      {
+        id: 'q2',
+        question: `What contexts have you used ${skillName} in? (travel, work, study, etc.)`,
+        type: 'text',
+        placeholder: 'Describe where and how you use this language...',
+      },
+      {
+        id: 'q3',
+        question: `How would you rate your reading and writing skills in ${skillName}?`,
+        type: 'text',
+        placeholder: 'Describe your reading and writing abilities...',
+      },
+      {
+        id: 'q4',
+        question: `How would you help someone learn ${skillName}? What approach would you take?`,
+        type: 'text',
+        placeholder: 'Explain your teaching method...',
+      },
+    ]
+  } else if (isCreative) {
+    questions = [
+      {
+        id: 'q1',
+        question: `Describe your experience with ${skillName}. What styles or genres do you work with?`,
+        type: 'text',
+        placeholder: 'Share your creative experience...',
+      },
+      {
+        id: 'q2',
+        question: `What ${skillName} techniques are you comfortable with?`,
+        type: 'text',
+        placeholder: 'Describe the techniques you use...',
+      },
+      {
+        id: 'q3',
+        question: `Have you created or performed any ${skillName} work? Share your experience.`,
+        type: 'text',
+        placeholder: 'Describe your creations or performances...',
+      },
+      {
+        id: 'q4',
+        question: `How would you teach someone ${skillName}? What would you start with?`,
+        type: 'text',
+        placeholder: 'Explain your teaching approach...',
+      },
+    ]
+  } else {
+    // Generic fallback for other skills
+    questions = [
+      {
+        id: 'q1',
+        question: `Describe your experience with ${skillName}. How long have you been practicing?`,
+        type: 'text',
+        placeholder: 'Share your experience with this skill...',
+      },
+      {
+        id: 'q2',
+        question: `What aspects of ${skillName} are you most comfortable with?`,
+        type: 'text',
+        placeholder: 'Describe your strengths and abilities...',
+      },
+      {
+        id: 'q3',
+        question: `Share a specific example of how you've used ${skillName} in practice.`,
+        type: 'text',
+        placeholder: 'Describe a practical application...',
+      },
+      {
+        id: 'q4',
+        question: `How would you help someone learn ${skillName}? What would you focus on?`,
+        type: 'text',
+        placeholder: 'Explain your teaching approach...',
+      },
+    ]
   }
+  
+  return { questions }
 }
 
 function parseAIResponse(text: string): any {
   try {
+    const summaryMatch = text.match(/SUMMARY:\s*(.+?)(?=LEVEL:|$)/is)
     const levelMatch = text.match(/LEVEL:\s*(\w+)/i)
     const difficultyMatch = text.match(/DIFFICULTY:\s*(\d+)/i)
-    const explanationMatch = text.match(/EXPLANATION:\s*(.+)/is)
+    const explanationMatch = text.match(/EXPLANATION:\s*(.+?)(?=SUMMARY:|$)/is)
 
+    const summary = summaryMatch?.[1]?.trim() || ''
     const level = levelMatch?.[1]?.toLowerCase() || 'intermediate'
     const difficulty = parseInt(difficultyMatch?.[1] || '50')
     const explanation = explanationMatch?.[1]?.trim() || 'Assessment completed.'
@@ -663,6 +719,7 @@ function parseAIResponse(text: string): any {
       level: ['beginner', 'intermediate', 'advanced'].includes(level) ? level : 'intermediate',
       difficulty: Math.max(0, Math.min(100, difficulty)),
       explanation,
+      summary: summary || explanation, // Use summary if available, fallback to explanation
     }
   } catch (error) {
     console.error('Error parsing AI response:', error)
@@ -672,37 +729,41 @@ function parseAIResponse(text: string): any {
 
 function calculateFallbackAssessment(answers: any): any {
   // Simple rule-based assessment when AI is unavailable
+  // Analyze text responses by length and content indicators
   let difficulty = 50
   let level = 'intermediate'
-
-  const expScore = {
-    'less-than-6-months': 20,
-    '6-months-to-2-years': 40,
-    '2-to-5-years': 70,
-    'more-than-5-years': 90,
-  }[answers.experience] || 50
-
-  const projScore = {
-    'none': 20,
-    '1-3': 45,
-    '4-10': 70,
-    'more-than-10': 90,
-  }[answers.projects] || 50
-
-  difficulty = Math.round((expScore + projScore) / 2)
-
-  if (difficulty < 35) {
+  
+  // Get all answer values (text responses)
+  const answerTexts = Object.values(answers).filter((v: any) => typeof v === 'string' && v.trim().length > 0)
+  const totalLength = answerTexts.reduce((sum: number, text: any) => sum + text.length, 0)
+  const avgLength = answerTexts.length > 0 ? totalLength / answerTexts.length : 0
+  
+  // Simple heuristics based on response length and number of responses
+  // Longer, more detailed responses suggest better understanding
+  if (answerTexts.length === 0 || avgLength < 50) {
+    difficulty = 30
     level = 'beginner'
-  } else if (difficulty < 70) {
+  } else if (avgLength < 150) {
+    difficulty = 50
     level = 'intermediate'
+  } else if (avgLength < 300) {
+    difficulty = 70
+    level = 'advanced'
   } else {
+    difficulty = 85
     level = 'advanced'
   }
+
+  // Combine all responses for summary
+  const summary = answerTexts.length > 0 
+    ? `Based on your responses, you've provided ${answerTexts.length} detailed answer${answerTexts.length > 1 ? 's' : ''} about ${Object.keys(answers)[0]?.replace('q', '') || 'your'} experience.`
+    : 'Limited responses provided.'
 
   return {
     level,
     difficulty,
     explanation: `Based on your responses, you appear to be at a ${level} level with approximately ${difficulty}/100 proficiency.`,
+    summary,
   }
 }
 

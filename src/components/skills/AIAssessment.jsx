@@ -113,107 +113,175 @@ export default function AIAssessment({ skillName, onComplete, onCancel }) {
   }
 
   const getFallbackQuestions = () => {
-    return [
-      {
-        id: 'experience',
-        question: `How long have you been practicing ${skillName}?`,
-        options: [
-          { value: 'less-than-6-months', label: 'Less than 6 months' },
-          { value: '6-months-to-2-years', label: '6 months to 2 years' },
-          { value: '2-to-5-years', label: '2 to 5 years' },
-          { value: 'more-than-5-years', label: 'More than 5 years' },
-        ],
-      },
-      {
-        id: 'projects',
-        question: `How many projects or real-world applications have you completed with ${skillName}?`,
-        options: [
-          { value: 'none', label: 'None yet, still learning basics' },
-          { value: '1-3', label: '1-3 projects' },
-          { value: '4-10', label: '4-10 projects' },
-          { value: 'more-than-10', label: 'More than 10 projects' },
-        ],
-      },
-      {
-        id: 'comfort',
-        question: `How comfortable are you teaching ${skillName} to others?`,
-        options: [
-          { value: 'beginner', label: 'I can teach basic concepts' },
-          { value: 'intermediate', label: 'I can teach intermediate techniques' },
-          { value: 'advanced', label: 'I can teach advanced topics and best practices' },
-          { value: 'expert', label: 'I can mentor at a professional level' },
-        ],
-      },
-      {
-        id: 'time',
-        question: `How often do you currently use ${skillName}?`,
-        options: [
-          { value: 'rarely', label: 'Rarely / Not recently' },
-          { value: 'monthly', label: 'A few times a month' },
-          { value: 'weekly', label: 'Weekly' },
-          { value: 'daily', label: 'Daily or near-daily' },
-        ],
-      },
-    ]
+    // Detect skill type from name (simple heuristic)
+    const skillLower = skillName.toLowerCase()
+    const isSport = ['badminton', 'tennis', 'basketball', 'soccer', 'football', 'volleyball', 'swimming', 'yoga', 'gym', 'fitness', 'running', 'cycling', 'dancing', 'martial', 'karate', 'boxing'].some(s => skillLower.includes(s))
+    const isLanguage = ['spanish', 'french', 'german', 'chinese', 'japanese', 'korean', 'italian', 'portuguese', 'russian', 'arabic', 'hindi'].some(s => skillLower.includes(s))
+    const isCreative = ['music', 'guitar', 'piano', 'singing', 'art', 'drawing', 'painting', 'photography', 'writing', 'poetry'].some(s => skillLower.includes(s))
+    
+    if (isSport) {
+      return [
+        {
+          id: 'q1',
+          question: `Describe your experience with ${skillName}. How long have you been practicing and what level do you play at?`,
+          type: 'text',
+          placeholder: 'Share your playing experience and skill level...',
+        },
+        {
+          id: 'q2',
+          question: `What ${skillName} techniques and skills are you most comfortable with?`,
+          type: 'text',
+          placeholder: 'Describe the techniques you can perform...',
+        },
+        {
+          id: 'q3',
+          question: `Have you participated in any ${skillName} matches, competitions, or regular practice sessions? Describe your experience.`,
+          type: 'text',
+          placeholder: 'Share your competitive or practice experience...',
+        },
+        {
+          id: 'q4',
+          question: `How would you help someone learn ${skillName}? What would you focus on teaching first?`,
+          type: 'text',
+          placeholder: 'Explain your teaching approach...',
+        },
+      ]
+    } else if (isLanguage) {
+      return [
+        {
+          id: 'q1',
+          question: `Describe your ${skillName} speaking ability. How comfortable are you having conversations?`,
+          type: 'text',
+          placeholder: 'Share your speaking proficiency...',
+        },
+        {
+          id: 'q2',
+          question: `What contexts have you used ${skillName} in? (travel, work, study, etc.)`,
+          type: 'text',
+          placeholder: 'Describe where and how you use this language...',
+        },
+        {
+          id: 'q3',
+          question: `How would you rate your reading and writing skills in ${skillName}?`,
+          type: 'text',
+          placeholder: 'Describe your reading and writing abilities...',
+        },
+        {
+          id: 'q4',
+          question: `How would you help someone learn ${skillName}? What approach would you take?`,
+          type: 'text',
+          placeholder: 'Explain your teaching method...',
+        },
+      ]
+    } else if (isCreative) {
+      return [
+        {
+          id: 'q1',
+          question: `Describe your experience with ${skillName}. What styles or genres do you work with?`,
+          type: 'text',
+          placeholder: 'Share your creative experience...',
+        },
+        {
+          id: 'q2',
+          question: `What ${skillName} techniques are you comfortable with?`,
+          type: 'text',
+          placeholder: 'Describe the techniques you use...',
+        },
+        {
+          id: 'q3',
+          question: `Have you created or performed any ${skillName} work? Share your experience.`,
+          type: 'text',
+          placeholder: 'Describe your creations or performances...',
+        },
+        {
+          id: 'q4',
+          question: `How would you teach someone ${skillName}? What would you start with?`,
+          type: 'text',
+          placeholder: 'Explain your teaching approach...',
+        },
+      ]
+    } else {
+      // Generic fallback for other skills
+      return [
+        {
+          id: 'q1',
+          question: `Describe your experience with ${skillName}. How long have you been practicing?`,
+          type: 'text',
+          placeholder: 'Share your experience with this skill...',
+        },
+        {
+          id: 'q2',
+          question: `What aspects of ${skillName} are you most comfortable with?`,
+          type: 'text',
+          placeholder: 'Describe your strengths and abilities...',
+        },
+        {
+          id: 'q3',
+          question: `Share a specific example of how you've used ${skillName} in practice.`,
+          type: 'text',
+          placeholder: 'Describe a practical application...',
+        },
+        {
+          id: 'q4',
+          question: `How would you help someone learn ${skillName}? What would you focus on?`,
+          type: 'text',
+          placeholder: 'Explain your teaching approach...',
+        },
+      ]
+    }
   }
 
   const handleAnswer = (questionId, value) => {
     setAnswers({ ...answers, [questionId]: value })
+  }
+
+  const handleNext = () => {
     if (step < questions.length) {
-      setTimeout(() => setStep(step + 1), 300)
+      setStep(step + 1)
+    }
+  }
+
+  const handlePrevious = () => {
+    if (step > 1) {
+      setStep(step - 1)
     }
   }
 
   const calculateFallbackAssessment = () => {
-    // Fallback calculation if Gemini fails
+    // Fallback calculation if Gemini fails - analyze text responses
     let level = 'beginner'
     let difficulty = 30
     let explanation = ''
-
-    const expScore = {
-      'less-than-6-months': 10,
-      '6-months-to-2-years': 30,
-      '2-to-5-years': 60,
-      'more-than-5-years': 90,
-    }[answers.experience] || 10
-
-    const projScore = {
-      'none': 10,
-      '1-3': 35,
-      '4-10': 65,
-      'more-than-10': 90,
-    }[answers.projects] || 10
-
-    const comfortScore = {
-      'beginner': 25,
-      'intermediate': 50,
-      'advanced': 75,
-      'expert': 95,
-    }[answers.comfort] || 25
-
-    const timeScore = {
-      'rarely': 15,
-      'monthly': 35,
-      'weekly': 65,
-      'daily': 90,
-    }[answers.time] || 15
-
-    difficulty = Math.round(
-      expScore * 0.3 + projScore * 0.3 + comfortScore * 0.25 + timeScore * 0.15
-    )
-
-    if (difficulty < 35) {
+    
+    // Get all answer values (text responses)
+    const answerTexts = Object.values(answers).filter((v) => typeof v === 'string' && v.trim().length > 0)
+    const totalLength = answerTexts.reduce((sum, text) => sum + text.length, 0)
+    const avgLength = answerTexts.length > 0 ? totalLength / answerTexts.length : 0
+    
+    // Simple heuristics based on response length and number of responses
+    if (answerTexts.length === 0 || avgLength < 50) {
+      difficulty = 30
       level = 'beginner'
       explanation = `Based on your responses, you're at a beginner level with ${skillName}. You have foundational knowledge and are building your skills through practice.`
-    } else if (difficulty < 70) {
+    } else if (avgLength < 150) {
+      difficulty = 50
       level = 'intermediate'
       explanation = `Based on your responses, you're at an intermediate level with ${skillName}. You have solid experience and can work independently on most tasks.`
-    } else {
+    } else if (avgLength < 300) {
+      difficulty = 70
       level = 'advanced'
       explanation = `Based on your responses, you're at an advanced level with ${skillName}. You have extensive experience and can mentor others effectively.`
+    } else {
+      difficulty = 85
+      level = 'advanced'
+      explanation = `Based on your responses, you're at an advanced level with ${skillName}. You demonstrate deep expertise and can mentor others effectively.`
     }
 
-    return { level, difficulty, explanation }
+    const summary = answerTexts.length > 0 
+      ? `Based on your ${answerTexts.length} detailed response${answerTexts.length > 1 ? 's' : ''}, you've shared your knowledge and experience with ${skillName}.`
+      : 'Limited responses provided.'
+
+    return { level, difficulty, explanation, summary }
   }
 
   const handleSubmit = async () => {
@@ -316,8 +384,10 @@ export default function AIAssessment({ skillName, onComplete, onCancel }) {
   }
 
   const currentQuestion = questions[step - 1]
+  const currentAnswer = answers[currentQuestion?.id] || ''
   const allAnswered = Object.keys(answers).length === questions.length && 
-                       Object.values(answers).every(a => a !== '' && a !== undefined)
+                       Object.values(answers).every(a => typeof a === 'string' && a.trim().length > 0)
+  const canProceed = currentAnswer.trim().length > 0
 
   if (loadingQuestions) {
     return (
@@ -330,7 +400,7 @@ export default function AIAssessment({ skillName, onComplete, onCancel }) {
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Generating personalized questions for {skillName}...</p>
-          <p className="text-sm text-gray-500 mt-2">Using AI to create skill-specific assessment</p>
+          <p className="text-sm text-gray-500 mt-2">Using AI to create general knowledge assessment</p>
         </div>
       </div>
     )
@@ -366,40 +436,60 @@ export default function AIAssessment({ skillName, onComplete, onCancel }) {
           </div>
 
           {currentQuestion && (
-            <div className="space-y-3">
-              <p className="font-medium text-gray-900 mb-4">
+            <div className="space-y-4">
+              <p className="font-medium text-gray-900 mb-4 text-lg">
                 {currentQuestion.question}
               </p>
-              {currentQuestion.options.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => handleAnswer(currentQuestion.id, option.value)}
-                  className={`w-full p-4 text-left border-2 rounded-lg transition-all ${
-                    answers[currentQuestion.id] === option.value
-                      ? 'border-primary-600 bg-primary-50'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
+              <textarea
+                value={currentAnswer}
+                onChange={(e) => handleAnswer(currentQuestion.id, e.target.value)}
+                placeholder={currentQuestion.placeholder || 'Type your response here...'}
+                rows={6}
+                className="w-full p-4 border-2 border-gray-300 rounded-lg focus:border-primary-600 focus:ring-2 focus:ring-primary-200 focus:outline-none resize-y min-h-[120px] text-gray-900 placeholder-gray-400"
+              />
+              <div className="flex items-center justify-between text-sm text-gray-500">
+                <span>{currentAnswer.length} characters</span>
+                <span className={currentAnswer.trim().length < 20 ? 'text-orange-500' : 'text-gray-500'}>
+                  {currentAnswer.trim().length < 20 ? 'Please provide more detail' : 'Good length'}
+                </span>
+              </div>
+              
+              {/* Navigation buttons */}
+              <div className="flex gap-3 pt-2">
+                {step > 1 && (
+                  <button
+                    onClick={handlePrevious}
+                    className="btn btn-secondary flex-1"
+                  >
+                    ← Previous
+                  </button>
+                )}
+                {step < questions.length ? (
+                  <button
+                    onClick={handleNext}
+                    disabled={!canProceed}
+                    className={`btn ${canProceed ? 'btn-primary' : 'btn-secondary opacity-50 cursor-not-allowed'} flex-1`}
+                  >
+                    Next →
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!allAnswered}
+                    className={`btn ${allAnswered ? 'btn-primary' : 'btn-secondary opacity-50 cursor-not-allowed'} flex-1`}
+                  >
+                    Get AI Assessment
+                  </button>
+                )}
+              </div>
             </div>
-          )}
-
-          {allAnswered && (
-            <button
-              onClick={handleSubmit}
-              className="btn btn-primary w-full mt-6"
-            >
-              Get AI Assessment
-            </button>
           )}
         </>
       ) : (
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Analyzing your responses with AI...</p>
+          <p className="text-sm text-gray-500 mt-2">Creating a summary and assessing your skill level</p>
         </div>
       )}
     </div>

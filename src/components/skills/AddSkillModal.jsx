@@ -159,7 +159,8 @@ export default function AddSkillModal({ onClose, onSkillAdded, initialRole }) {
       if (aiAssessment) {
         skillData.ai_suggested_level = aiAssessment.level
         skillData.ai_suggested_difficulty = aiAssessment.difficulty
-        skillData.ai_explanation = aiAssessment.explanation
+        // Store the summary (expertise summary) in ai_explanation, fallback to explanation if no summary
+        skillData.ai_explanation = aiAssessment.summary || aiAssessment.explanation
         skillData.ai_assessed_at = new Date().toISOString()
       }
 
