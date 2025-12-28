@@ -461,8 +461,8 @@ export default function MySwaps() {
                 </div>
               </div>
 
-              <div className="flex justify-between items-center pt-4 border-t border-gray-200 text-sm text-gray-600">
-                <span>
+              <div className="flex justify-between items-center pt-4 border-t border-gray-200 text-sm">
+                <span className="text-white">
                   Created {new Date(swap.created_at).toLocaleDateString()}
                 </span>
                 {swap.swaps.fairness_score && (

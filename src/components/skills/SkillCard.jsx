@@ -125,7 +125,7 @@ export default function SkillCard({ skill, onDelete }) {
       )}
 
       <div className="flex justify-between items-center pt-4 border-t border-dark-800">
-        <span className="text-xs text-dark-500">
+        <span className="text-xs text-white">
           Added {new Date(skill.created_at).toLocaleDateString()}
         </span>
         <button

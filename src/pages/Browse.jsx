@@ -423,8 +423,8 @@ export default function Browse() {
                   )}
                   {skill.weekly_hours_available > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-dark-400">Available:</span>
-                      <span className="font-medium text-dark-200">
+                      <span className="text-white">Available:</span>
+                      <span className="font-medium text-white">
                         {skill.weekly_hours_available}h/week
                       </span>
                     </div>
@@ -469,7 +469,7 @@ export default function Browse() {
                       {/* Capacity Display */}
                       <div className="text-sm text-dark-300 mb-2">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-dark-500">Available:</span>
+                          <span className="text-white">Available:</span>
                           <span className={`font-semibold ${
                             isFullyBooked ? 'text-error-400' : 
                             isPartiallyBooked ? 'text-warning-400' : 
