@@ -11,7 +11,7 @@ import {
   ERROR_MESSAGES 
 } from '../../utils/constants'
 
-export default function AddSkillModal({ onClose, onSkillAdded }) {
+export default function AddSkillModal({ onClose, onSkillAdded, initialRole }) {
   const { user } = useAuth()
   const { error: showError } = useToast()
   const [loading, setLoading] = useState(false)
@@ -19,7 +19,7 @@ export default function AddSkillModal({ onClose, onSkillAdded }) {
   const [formData, setFormData] = useState({
     skillName: '',
     category: '',
-    role: SKILL_ROLES.TEACH,
+    role: initialRole || SKILL_ROLES.TEACH,
     level: '',
     difficultyScore: '',
     weeklyHours: '',

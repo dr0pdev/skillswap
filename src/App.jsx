@@ -18,6 +18,7 @@ import ProposeSwap from './pages/ProposeSwap'
 import FindSwaps from './pages/FindSwaps'
 import MySwaps from './pages/MySwaps'
 import Profile from './pages/Profile'
+import Chat from './pages/Chat'
 
 import './App.css'
 
@@ -100,6 +101,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Profile />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Chat />
                 </Layout>
               </ProtectedRoute>
             }

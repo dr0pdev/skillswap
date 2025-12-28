@@ -2,12 +2,19 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { calculateSkillValue, findMatches } from '../utils/matching'
+import { fetchActiveSwaps, filterActiveSkills } from '../utils/activeSwaps'
+import { calculateRemainingHours } from '../utils/capacity'
+import HoursAllocationForm from '../components/swaps/HoursAllocationForm'
 
 export default function FindSwaps() {
   const { user, profile } = useAuth()
   const [loading, setLoading] = useState(true)
   const [matches, setMatches] = useState([])
   const [mySkills, setMySkills] = useState({ teaching: [], learning: [] })
+  const [selectedMatch, setSelectedMatch] = useState(null) // For hours selection
+  const [proposedHours, setProposedHours] = useState(1)
+  const [timePreferences, setTimePreferences] = useState({})
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     if (user?.id && profile?.id) {
@@ -34,17 +41,87 @@ export default function FindSwaps() {
       const teaching = userSkills?.filter(s => s.role === 'teach') || []
       const learning = userSkills?.filter(s => s.role === 'learn') || []
 
-      setMySkills({ teaching, learning })
+      // Fetch active swaps to exclude skills already being learned
+      const { activeLearnSkillIds } = await fetchActiveSwaps(user.id)
 
-      if (teaching.length === 0 || learning.length === 0) {
+      // Filter out learning skills that are already in active swaps
+      const availableLearningSkills = filterActiveSkills(learning, activeLearnSkillIds, 'skill_id')
+
+      setMySkills({ teaching, learning: availableLearningSkills })
+
+      if (teaching.length === 0 || availableLearningSkills.length === 0) {
         setLoading(false)
         return
       }
 
-      // Find potential matches
-      const potentialMatches = await findMatches(user.id, teaching, learning, profile)
+      // Find potential matches using ONLY available (non-active) learning skills
+      const potentialMatches = await findMatches(user.id, teaching, availableLearningSkills, profile)
 
-      setMatches(potentialMatches)
+      console.log('FindSwaps: Found', potentialMatches.length, 'potential matches BEFORE capacity check')
+      console.log('Potential matches:', potentialMatches)
+
+      // Filter matches by capacity - both sides must have available hours
+      const capacityCheckedMatches = await Promise.all(
+        potentialMatches.map(async (match) => {
+          try {
+            // Check if I have capacity to teach
+            const myTeachCapacity = await calculateRemainingHours(
+              user.id,
+              match.you_teach.skill_id,
+              'teach'
+            )
+
+            // Check if they have capacity to teach me
+            const theirTeachCapacity = await calculateRemainingHours(
+              match.partner.id,
+              match.they_teach.skill_id,
+              'teach'
+            )
+
+            console.log('Capacity check for match:', {
+              mySkill: match.you_teach.skills?.name,
+              myCapacity: myTeachCapacity,
+              theirSkill: match.they_teach.skills?.name,
+              theirCapacity: theirTeachCapacity,
+              passesCheck: myTeachCapacity.remainingHours >= 0.5 && theirTeachCapacity.remainingHours >= 0.5
+            })
+
+            // Both must have at least 0.5h/week available (or unlimited)
+            const myHasCapacity = myTeachCapacity.isUnlimited || myTeachCapacity.remainingHours >= 0.5
+            const theirHasCapacity = theirTeachCapacity.isUnlimited || theirTeachCapacity.remainingHours >= 0.5
+            
+            if (myHasCapacity && theirHasCapacity) {
+              const maxHours = Math.min(
+                myTeachCapacity.isUnlimited ? 10 : myTeachCapacity.remainingHours,
+                theirTeachCapacity.isUnlimited ? 10 : theirTeachCapacity.remainingHours
+              )
+              
+              return {
+                ...match,
+                myTeachCapacity,
+                theirTeachCapacity,
+                maxPossibleHours: maxHours,
+                isLimitedAvailability: (
+                  (!myTeachCapacity.isUnlimited && myTeachCapacity.remainingHours < 2) ||
+                  (!theirTeachCapacity.isUnlimited && theirTeachCapacity.remainingHours < 2)
+                )
+              }
+            }
+            console.warn('Match filtered out due to capacity:', match)
+            return null
+          } catch (error) {
+            console.error('Error checking capacity for match:', error, match)
+            return null
+          }
+        })
+      )
+
+      // Filter out null values (matches with no capacity)
+      const validMatches = capacityCheckedMatches.filter(Boolean)
+      
+      console.log(`FindSwaps: ${potentialMatches.length} potential matches, ${validMatches.length} with capacity`)
+      
+      setMatches(validMatches)
     } catch (error) {
       console.error('Error finding matches:', error)
     } finally {
@@ -52,8 +129,24 @@ export default function FindSwaps() {
     }
   }
 
-  const handleProposeSwap = async (match) => {
-    if (!confirm(`Propose a swap with ${match.partner.full_name}?`)) return
+  const handleProposeSwap = (match) => {
+    // Show hours selection form
+    setSelectedMatch(match)
+    setProposedHours(1)
+    setTimePreferences({})
+  }
+
+  const handleConfirmProposal = async () => {
+    if (!selectedMatch) return
+    
+    // Validate hours
+    const maxHours = selectedMatch.maxPossibleHours || 10
+    if (proposedHours <= 0 || proposedHours > maxHours) {
+      alert(`Please select between 0.5 and ${maxHours} hours per week.`)
+      return
+    }
+
+    setSubmitting(true)
 
     try {
       // Create swap
@@ -62,40 +155,42 @@ export default function FindSwaps() {
         .insert([{
           swap_type: 'direct',
           status: 'proposed',
-          fairness_score: match.fairness_score,
-          balance_explanation: match.explanation,
+          fairness_score: selectedMatch.fairness_score,
+          balance_explanation: selectedMatch.explanation,
         }])
         .select()
         .single()
 
       if (swapError) throw swapError
 
-      // Create participants
+      // Create participants with hours
       const participants = [
         {
           swap_id: swap.id,
           user_id: user.id,
-          teaching_skill_id: match.you_teach.skill_id,
-          teaching_user_skill_id: match.you_teach.id,
-          teaching_hours_per_week: match.you_teach.weekly_hours_available,
-          learning_skill_id: match.you_learn.skill_id,
-          learning_from_user_id: match.partner.id,
-          learning_hours_per_week: match.they_teach.weekly_hours_available,
-          giving_value: match.you_give_value,
-          receiving_value: match.you_receive_value,
+          teaching_skill_id: selectedMatch.you_teach.skill_id,
+          teaching_user_skill_id: selectedMatch.you_teach.id,
+          teaching_hours_per_week: proposedHours,
+          learning_skill_id: selectedMatch.you_learn.skill_id,
+          learning_from_user_id: selectedMatch.partner.id,
+          learning_hours_per_week: proposedHours,
+          preferred_days: timePreferences.days ? [timePreferences.days] : null,
+          preferred_times: timePreferences.time ? [timePreferences.time] : null,
+          giving_value: selectedMatch.you_give_value,
+          receiving_value: selectedMatch.you_receive_value,
           has_accepted: true,
         },
         {
           swap_id: swap.id,
-          user_id: match.partner.id,
-          teaching_skill_id: match.they_teach.skill_id,
-          teaching_user_skill_id: match.they_teach.id,
-          teaching_hours_per_week: match.they_teach.weekly_hours_available,
-          learning_skill_id: match.you_teach.skill_id,
+          user_id: selectedMatch.partner.id,
+          teaching_skill_id: selectedMatch.they_teach.skill_id,
+          teaching_user_skill_id: selectedMatch.they_teach.id,
+          teaching_hours_per_week: proposedHours,
+          learning_skill_id: selectedMatch.you_teach.skill_id,
           learning_from_user_id: user.id,
-          learning_hours_per_week: match.you_teach.weekly_hours_available,
-          giving_value: match.they_give_value,
-          receiving_value: match.they_receive_value,
+          learning_hours_per_week: proposedHours,
+          giving_value: selectedMatch.they_give_value,
+          receiving_value: selectedMatch.they_receive_value,
           has_accepted: false,
         },
       ]
@@ -108,19 +203,22 @@ export default function FindSwaps() {
 
       // Create notification for partner
       await supabase.from('notifications').insert([{
-        user_id: match.partner.id,
+        user_id: selectedMatch.partner.id,
         type: 'swap_proposal',
         title: 'New Swap Proposal',
-        message: `${profile.full_name} wants to swap ${match.you_teach.skills.name} for ${match.they_teach.skills.name}`,
+        message: `${profile.full_name} wants to swap ${selectedMatch.you_teach.skills.name} for ${selectedMatch.they_teach.skills.name}`,
         swap_id: swap.id,
         from_user_id: user.id,
       }])
 
       alert('Swap proposal sent!')
-      fetchDataAndFindMatches()
+      setSelectedMatch(null)
+      fetchDataAndFindMatches() // Refresh
     } catch (error) {
       console.error('Error proposing swap:', error)
       alert('Failed to propose swap: ' + error.message)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -186,7 +284,71 @@ export default function FindSwaps() {
       </div>
 
       {/* Matches List */}
-      {matches.length === 0 ? (
+      {selectedMatch ? (
+        /* Hours Allocation Form for selected match */
+        <div className="card bg-white">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Configure Hours for Swap</h2>
+            <button
+              onClick={() => setSelectedMatch(null)}
+              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              ← Back to matches
+            </button>
+          </div>
+
+          {/* Selected Match Summary */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-gray-600 mb-1">You Teach:</p>
+                <p className="text-gray-900 font-semibold">
+                  {selectedMatch.you_teach.skills?.name}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-600 mb-1">You Learn:</p>
+                <p className="text-gray-900 font-semibold">
+                  {selectedMatch.they_teach.skills?.name}
+                </p>
+              </div>
+            </div>
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              <p className="text-xs text-gray-600">
+                Partner: <span className="font-medium text-gray-900">{selectedMatch.partner.full_name}</span>
+              </p>
+              <p className="text-xs text-gray-600 mt-1">
+                Fairness Score: <span className="font-medium text-primary-600">{selectedMatch.fairness_score}%</span>
+              </p>
+            </div>
+          </div>
+
+          <HoursAllocationForm
+            teacherCapacity={selectedMatch.myTeachCapacity}
+            learnerCapacity={selectedMatch.theirTeachCapacity}
+            onHoursChange={setProposedHours}
+            onPreferencesChange={setTimePreferences}
+            initialHours={proposedHours}
+            initialPreferences={timePreferences}
+          />
+
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={() => setSelectedMatch(null)}
+              className="btn btn-secondary flex-1"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmProposal}
+              disabled={submitting || proposedHours <= 0}
+              className="btn btn-primary flex-[2]"
+            >
+              {submitting ? 'Sending...' : 'Confirm & Send Proposal'}
+            </button>
+          </div>
+        </div>
+      ) : matches.length === 0 ? (
         <div className="card text-center py-12">
           <div className="text-6xl mb-4">😔</div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -235,7 +397,7 @@ export default function FindSwaps() {
                         {match.you_teach.skills.name}
                       </p>
                       <p className="text-sm text-gray-600 mt-1">
-                        Level: {match.you_teach.level} • {match.you_teach.weekly_hours_available}h/week
+                        Level: {match.you_teach.level} • Available: {match.myTeachCapacity?.remainingHours || 0}h/week
                       </p>
                       <p className="text-xs text-gray-500 mt-2">
                         Value: {match.you_give_value.toFixed(0)} points
@@ -250,7 +412,7 @@ export default function FindSwaps() {
                         {match.they_teach.skills.name}
                       </p>
                       <p className="text-sm text-gray-600 mt-1">
-                        Level: {match.they_teach.level} • {match.they_teach.weekly_hours_available}h/week
+                        Level: {match.they_teach.level} • Available: {match.theirTeachCapacity?.remainingHours || 0}h/week
                       </p>
                       <p className="text-xs text-gray-500 mt-2">
                         Value: {match.you_receive_value.toFixed(0)} points

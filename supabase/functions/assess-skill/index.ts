@@ -88,11 +88,11 @@ serve(async (req) => {
       console.log('🔑 Authorization header found, verifying token...')
 
       // Create Supabase client with the auth header
-      const supabaseClient = createClient(
+    const supabaseClient = createClient(
         supabaseUrl,
         supabaseAnonKey,
-        {
-          global: {
+      {
+        global: {
             headers: { Authorization: bearerToken },
           },
         }
@@ -224,10 +224,10 @@ serve(async (req) => {
         })
       } else {
         const fallbackAssessment = calculateFallbackAssessment(answers || {})
-        return new Response(JSON.stringify(fallbackAssessment), {
+      return new Response(JSON.stringify(fallbackAssessment), {
           status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
       }
     }
 
@@ -282,10 +282,10 @@ serve(async (req) => {
       console.log('📝 Evaluating correctness of technical answers...')
       
       const assessment = await assessSkillWithGemini(skillName, answers, geminiApiKey, geminiModel, questionsToUse)
-      return new Response(JSON.stringify(assessment), {
+    return new Response(JSON.stringify(assessment), {
         status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
     }
   } catch (error) {
     console.error('Error in assess-skill function:', error)
