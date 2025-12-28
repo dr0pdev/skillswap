@@ -217,9 +217,9 @@ export default function ChatView({ partner, threadId: initialThreadId, onClose }
   }
 
   return (
-    <div className="w-full h-full bg-dark-900 border border-dark-700 rounded-xl shadow-2xl flex flex-col">
+    <div className="w-full h-full bg-dark-900 rounded-lg shadow-lg flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-5 border-b border-dark-800 bg-dark-900/95">
+      <div className="flex items-center justify-between p-5 border-b border-dark-800/40 bg-dark-900/95">
         <div className="flex items-center gap-3">
           {partner?.avatar_url ? (
             <img
@@ -331,7 +331,7 @@ export default function ChatView({ partner, threadId: initialThreadId, onClose }
       </div>
 
       {/* Input Area */}
-      <form onSubmit={handleSendMessage} className="p-4 border-t border-dark-800 bg-dark-900/95">
+      <form onSubmit={handleSendMessage} className="p-4 border-t border-dark-800/40 bg-dark-900/95">
         <div className="flex items-end gap-2">
           <textarea
             value={newMessage}

@@ -265,12 +265,12 @@ export default function Chat() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* Conversations List */}
         <div className="lg:col-span-1">
-          <div className="card bg-dark-900 border border-dark-800 h-[600px] flex flex-col">
+          <div className="bg-dark-900 rounded-lg shadow-lg h-[calc(100vh-200px)] flex flex-col">
             {/* List Header */}
-            <div className="p-4 border-b border-dark-800">
+            <div className="p-4 border-b border-dark-800/40">
               <h2 className="text-lg font-semibold text-dark-100">
                 Conversations
               </h2>
@@ -296,7 +296,7 @@ export default function Chat() {
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-dark-800">
+                <div className="divide-y divide-dark-800/40">
                   {threads.map((thread) => {
                     const isSelected = selectedThread?.id === thread.id
                     const isUnread = thread.unreadCount > 0
@@ -375,7 +375,7 @@ export default function Chat() {
         {/* Chat View */}
         <div className="lg:col-span-2">
           {selectedPartner ? (
-            <div className="h-[600px]">
+            <div className="h-[calc(100vh-200px)]">
               <ChatView
                 partner={selectedPartner}
                 threadId={selectedThread?.id}
@@ -387,7 +387,7 @@ export default function Chat() {
               />
             </div>
           ) : (
-            <div className="card bg-dark-900 border border-dark-800 h-[600px] flex items-center justify-center">
+            <div className="bg-dark-900 rounded-lg shadow-lg h-[calc(100vh-200px)] flex items-center justify-center">
               <div className="text-center">
                 <div className="w-20 h-20 rounded-full bg-dark-800 flex items-center justify-center mx-auto mb-4">
                   <ChatBubbleLeftRightIcon className="w-10 h-10 text-dark-500" />
