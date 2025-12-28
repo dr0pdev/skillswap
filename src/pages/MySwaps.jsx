@@ -172,6 +172,26 @@ export default function MySwaps() {
     }
   }
 
+  const handleCompleteSwap = async (swapId) => {
+    if (!confirm('Mark this swap as completed? This cannot be undone.')) return
+
+    try {
+      await supabase
+        .from('swaps')
+        .update({ 
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', swapId)
+
+      fetchSwaps()
+      alert('Swap marked as completed! 🎉')
+    } catch (error) {
+      console.error('Error completing swap:', error)
+      alert('Failed to mark swap as completed')
+    }
+  }
+
   const getStatusBadge = (status) => {
     const styles = {
       proposed: 'bg-yellow-100 text-yellow-800',
@@ -331,8 +351,30 @@ export default function MySwaps() {
                     </span>
                   )}
                   {swap.swaps.status === 'active' && (
-                    <span className="text-sm text-green-600 font-medium">
-                      ✓ Active
+                    <div className="flex lg:flex-col gap-2">
+                      <button
+                        onClick={() => handleCompleteSwap(swap.swaps.id)}
+                        className="btn btn-primary whitespace-nowrap flex items-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Mark as Completed
+                      </button>
+                      <span className="text-sm text-green-600 font-medium flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        Active
+                      </span>
+                    </div>
+                  )}
+                  {swap.swaps.status === 'completed' && (
+                    <span className="text-sm text-purple-600 font-medium flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      Completed
                     </span>
                   )}
                 </div>

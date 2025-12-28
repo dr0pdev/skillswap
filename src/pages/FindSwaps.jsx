@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { calculateSkillValue, findMatches } from '../utils/matching'
+import { fetchActiveSwaps, filterActiveSkills } from '../utils/activeSwaps'
 
 export default function FindSwaps() {
   const { user, profile } = useAuth()
@@ -34,15 +35,21 @@ export default function FindSwaps() {
       const teaching = userSkills?.filter(s => s.role === 'teach') || []
       const learning = userSkills?.filter(s => s.role === 'learn') || []
 
-      setMySkills({ teaching, learning })
+      // Fetch active swaps to exclude skills already being learned
+      const { activeLearnSkillIds } = await fetchActiveSwaps(user.id)
 
-      if (teaching.length === 0 || learning.length === 0) {
+      // Filter out learning skills that are already in active swaps
+      const availableLearningSkills = filterActiveSkills(learning, activeLearnSkillIds, 'skill_id')
+
+      setMySkills({ teaching, learning: availableLearningSkills })
+
+      if (teaching.length === 0 || availableLearningSkills.length === 0) {
         setLoading(false)
         return
       }
 
-      // Find potential matches
-      const potentialMatches = await findMatches(user.id, teaching, learning, profile)
+      // Find potential matches using ONLY available (non-active) learning skills
+      const potentialMatches = await findMatches(user.id, teaching, availableLearningSkills, profile)
 
       setMatches(potentialMatches)
     } catch (error) {

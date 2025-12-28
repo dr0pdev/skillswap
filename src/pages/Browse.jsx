@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import { SKILL_CATEGORIES, SKILL_ROLES } from '../utils/constants'
+import { fetchActiveSwaps, filterActiveSkills } from '../utils/activeSwaps'
 
 export default function Browse() {
   const { user } = useAuth()
@@ -14,6 +15,8 @@ export default function Browse() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [activeTab, setActiveTab] = useState(SKILL_ROLES.TEACH)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [activeLearnSkillIds, setActiveLearnSkillIds] = useState([]) // Skills already being learned
+  const [activeSwapsMap, setActiveSwapsMap] = useState({}) // Map of skill_id -> swap_id
 
   const categories = ['all', ...SKILL_CATEGORIES]
 
@@ -29,6 +32,19 @@ export default function Browse() {
       try {
         setLoading(true)
         console.log('Browse: Fetching', activeTab, 'skills')
+
+        // Fetch active swaps to exclude skills already being learned
+        const { activeLearnSkillIds: activeIds, activeSwaps } = await fetchActiveSwaps(user.id)
+        setActiveLearnSkillIds(activeIds)
+        
+        // Build map of skill_id -> swap_id for "View Active Swap" links
+        const swapMap = {}
+        activeSwaps.forEach(swap => {
+          if (swap.learning_skill_id) {
+            swapMap[swap.learning_skill_id] = swap.swap_id
+          }
+        })
+        setActiveSwapsMap(swapMap)
 
         const { data, error } = await supabase
           .from('user_skills')
@@ -59,9 +75,35 @@ export default function Browse() {
           setSkills([])
           setFilteredSkills([])
         } else {
-          console.log('Browse: Found', data?.length || 0, 'skills')
-          setSkills(data || [])
-          setFilteredSkills(data || [])
+          console.log('Browse: Found', data?.length || 0, 'skills before filtering')
+          
+          let filteredData = data || []
+
+          // If Learning tab, filter out skills where the owner is already actively learning them
+          if (activeTab === SKILL_ROLES.LEARN && filteredData.length > 0) {
+            // Fetch active swaps for all users who posted learning requests
+            const userIds = [...new Set(filteredData.map(skill => skill.user_id))]
+            
+            // For each user, check their active swaps
+            const usersActiveSkills = new Map()
+            
+            for (const userId of userIds) {
+              const { activeLearnSkillIds: theirActiveSkills } = await fetchActiveSwaps(userId)
+              usersActiveSkills.set(userId, theirActiveSkills)
+            }
+
+            // Filter out learning requests where the user is already actively learning that skill
+            filteredData = filteredData.filter(skill => {
+              const skillId = skill.skill_id || skill.skills?.id
+              const theirActiveSkills = usersActiveSkills.get(skill.user_id) || []
+              return !theirActiveSkills.includes(skillId)
+            })
+
+            console.log('Browse: After filtering active learners:', filteredData.length, 'skills')
+          }
+
+          setSkills(filteredData)
+          setFilteredSkills(filteredData)
         }
       } catch (error) {
         console.error('Browse failed:', error)
@@ -125,6 +167,19 @@ export default function Browse() {
   }, [skills, searchQuery, selectedCategory])
 
   const handleRequestToLearn = (skill) => {
+    // Check if already learning this skill
+    const skillId = skill.skill_id || skill.skills?.id
+    if (activeLearnSkillIds.includes(skillId)) {
+      // Redirect to active swap
+      const swapId = activeSwapsMap[skillId]
+      if (swapId) {
+        navigate('/my-swaps', { state: { highlightSwapId: swapId } })
+      } else {
+        alert('You are already actively learning this skill.')
+      }
+      return
+    }
+
     navigate('/propose-swap', { 
       state: { 
         targetSkill: skill,
@@ -341,16 +396,42 @@ export default function Browse() {
               )}
 
               {/* Action Button */}
-              <button
-                onClick={() =>
-                  activeTab === SKILL_ROLES.TEACH
-                    ? handleRequestToLearn(skill)
-                    : handleOfferToTeach(skill)
+              {(() => {
+                const skillId = skill.skill_id || skill.skills?.id
+                const isAlreadyLearning = activeTab === SKILL_ROLES.TEACH && activeLearnSkillIds.includes(skillId)
+                
+                if (isAlreadyLearning) {
+                  return (
+                    <div className="space-y-2">
+                      <div className="w-full px-4 py-2.5 bg-success-950/20 border border-success-700/50 rounded-lg text-center">
+                        <span className="text-xs font-semibold text-success-400">✓ Already Learning</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const swapId = activeSwapsMap[skillId]
+                          navigate('/my-swaps', { state: { highlightSwapId: swapId } })
+                        }}
+                        className="btn btn-secondary w-full text-sm"
+                      >
+                        View Active Swap
+                      </button>
+                    </div>
+                  )
                 }
-                className="btn btn-primary w-full"
-              >
-                {activeTab === SKILL_ROLES.TEACH ? 'Request to Learn' : 'Offer to Teach'}
-              </button>
+
+                return (
+                  <button
+                    onClick={() =>
+                      activeTab === SKILL_ROLES.TEACH
+                        ? handleRequestToLearn(skill)
+                        : handleOfferToTeach(skill)
+                    }
+                    className="btn btn-primary w-full"
+                  >
+                    {activeTab === SKILL_ROLES.TEACH ? 'Request to Learn' : 'Offer to Teach'}
+                  </button>
+                )
+              })()}
             </div>
           ))}
         </div>
