@@ -303,15 +303,15 @@ export default function ChatView({ partner, threadId: initialThreadId, onClose }
                       max-w-[70%] rounded-2xl px-4 py-2.5
                       ${isMe 
                         ? 'bg-primary-600 text-white rounded-br-sm' 
-                        : 'bg-dark-800 text-dark-100 rounded-bl-sm'
+                        : 'bg-dark-800 rounded-bl-sm'
                       }
                     `}>
-                      <p className="text-sm whitespace-pre-wrap break-words">
+                      <p className="text-sm whitespace-pre-wrap break-words text-white">
                         {msg.content}
                       </p>
                       <div className={`
                         text-[10px] mt-1 flex items-center gap-1
-                        ${isMe ? 'text-primary-200' : 'text-dark-500'}
+                        ${isMe ? 'text-primary-200' : 'text-white/70'}
                       `}>
                         <span>{formatTime(msg.created_at)}</span>
                         {isMe && (

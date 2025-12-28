@@ -352,19 +352,24 @@ export default function Browse() {
               </h3>
 
               <div className="flex flex-wrap gap-2 mb-4">
-                <span className={`badge ${
-                  activeTab === SKILL_ROLES.TEACH
-                    ? 'badge-primary'
-                    : 'bg-accent-900/30 text-accent-400 border-accent-800/50'
-                }`}>
+                <span 
+                  className="badge border px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1"
+                  style={{ backgroundColor: '#0C243D', color: 'white', borderColor: '#0C243D' }}
+                >
                   {activeTab === SKILL_ROLES.TEACH ? 'Teaching' : 'Learning'}
                 </span>
                 {skill.level && (
-                  <span className={`badge ${getLevelColor(skill.level)}`}>
+                  <span 
+                    className="badge border px-3 py-1 rounded-full text-xs font-medium"
+                    style={{ backgroundColor: '#0C243D', color: 'white', borderColor: '#0C243D' }}
+                  >
                     {skill.level}
                   </span>
                 )}
-                <span className="badge badge-secondary">
+                <span 
+                  className="badge border px-3 py-1 rounded-full text-xs font-medium"
+                  style={{ backgroundColor: '#0C243D', color: 'white', borderColor: '#0C243D' }}
+                >
                   {skill.skills.category}
                 </span>
               </div>

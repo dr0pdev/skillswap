@@ -130,7 +130,8 @@ export default function Skills() {
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="btn btn-primary gap-2"
+          className="btn gap-2 text-white font-medium px-6 py-3 rounded-lg transition-all duration-300 hover:opacity-90"
+          style={{ backgroundColor: '#0C243D' }}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -226,7 +227,8 @@ export default function Skills() {
           </p>
           <button
             onClick={() => setShowAddModal(true)}
-            className="btn btn-primary inline-flex items-center gap-2"
+            className="btn inline-flex items-center gap-2 text-white font-medium px-6 py-3 rounded-lg transition-all duration-300 hover:opacity-90"
+            style={{ backgroundColor: '#0C243D' }}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />

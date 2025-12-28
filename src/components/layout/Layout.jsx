@@ -52,7 +52,7 @@ export default function Layout({ children }) {
           ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'}
           w-64
         `}
-        style={{ backgroundColor: '#27496A', borderRight: '1px solid rgba(255, 255, 255, 0.1)' }}
+        style={{ backgroundColor: '#0C243D', borderRight: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: 0, marginTop: 0, top: 0 }}
       >
         {/* Collapse/Expand Tab (desktop only, top position) */}
         <button
@@ -73,20 +73,21 @@ export default function Layout({ children }) {
           </svg>
         </button>
         {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-4 border-b flex-shrink-0" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+        <div className="flex items-center justify-between h-16 px-4 border-b flex-shrink-0" style={{ borderColor: 'rgba(255, 255, 255, 0.1)', paddingTop: 0, marginTop: 0 }}>
           <Link 
             to="/dashboard" 
             className={`flex items-center group ${sidebarCollapsed ? 'lg:justify-center lg:w-full' : 'space-x-3'}`}
             onClick={() => setSidebarOpen(false)}
+            style={{ marginTop: 0, paddingTop: 0 }}
           >
             {!sidebarCollapsed && (
-              <div>
-                <h1 className="text-2xl font-bold text-white">Skill Swap AI</h1>
-                <p className="text-sm text-gray-300 mt-0.5">Connect. Learn. Grow.</p>
+              <div style={{ marginTop: 0, paddingTop: 0 }}>
+                <h1 className="text-2xl font-bold text-white" style={{ marginTop: 0, lineHeight: '1.2' }}>Skill Swap AI</h1>
+                <p className="text-sm text-gray-300" style={{ marginTop: '2px', lineHeight: '1.2' }}>Connect. Learn. Grow.</p>
               </div>
             )}
             {sidebarCollapsed && (
-              <div className="text-white font-bold text-xl">SS</div>
+              <div className="text-white font-bold text-xl" style={{ marginTop: 0 }}>SS</div>
             )}
           </Link>
           
@@ -233,7 +234,7 @@ export default function Layout({ children }) {
         style={{ minHeight: '100vh' }}
       >
         {/* Top Bar (Mobile only - hamburger menu) */}
-        <div className="lg:hidden sticky top-0 z-30" style={{ backgroundColor: '#27496A', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+        <div className="lg:hidden sticky top-0 z-30" style={{ backgroundColor: '#0C243D', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
           <div className="flex items-center justify-between h-16 px-4">
             <button
               onClick={() => setSidebarOpen(true)}

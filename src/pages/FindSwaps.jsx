@@ -233,13 +233,13 @@ export default function FindSwaps() {
   if (mySkills.teaching.length === 0 || mySkills.learning.length === 0) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900">Find Swaps</h1>
+        <h1 className="text-3xl font-bold" style={{ color: '#0C243D' }}>Find Swaps</h1>
         <div className="card text-center py-12">
           <div className="text-6xl mb-4">🔍</div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          <h3 className="text-xl font-semibold mb-2" style={{ color: '#0C243D' }}>
             Add Skills to Find Matches
           </h3>
-          <p className="text-gray-600 mb-6">
+          <p className="mb-6" style={{ color: '#0C243D' }}>
             {mySkills.teaching.length === 0 && mySkills.learning.length === 0
               ? 'Add both skills you can teach and skills you want to learn to find swap matches.'
               : mySkills.teaching.length === 0
@@ -257,8 +257,8 @@ export default function FindSwaps() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Find Swaps</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-3xl font-bold" style={{ color: '#0C243D' }}>Find Swaps</h1>
+        <p className="mt-1" style={{ color: '#0C243D' }}>
           Fair matches based on skill value, demand, and availability
         </p>
       </div>
@@ -266,18 +266,18 @@ export default function FindSwaps() {
       {/* Match Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card">
-          <p className="text-sm text-gray-600">Potential Matches</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{matches.length}</p>
+          <p className="text-sm text-white">Potential Matches</p>
+          <p className="text-2xl font-bold mt-1 text-white">{matches.length}</p>
         </div>
         <div className="card">
-          <p className="text-sm text-gray-600">Your Teaching Skills</p>
-          <p className="text-2xl font-bold text-green-600 mt-1">
+          <p className="text-sm text-white">Your Teaching Skills</p>
+          <p className="text-2xl font-bold text-green-400 mt-1">
             {mySkills.teaching.length}
           </p>
         </div>
         <div className="card">
-          <p className="text-sm text-gray-600">Your Learning Goals</p>
-          <p className="text-2xl font-bold text-blue-600 mt-1">
+          <p className="text-sm text-white">Your Learning Goals</p>
+          <p className="text-2xl font-bold text-blue-400 mt-1">
             {mySkills.learning.length}
           </p>
         </div>
@@ -286,39 +286,39 @@ export default function FindSwaps() {
       {/* Matches List */}
       {selectedMatch ? (
         /* Hours Allocation Form for selected match */
-        <div className="card bg-white">
+        <div className="card" style={{ backgroundColor: '#1e293b' }}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Configure Hours for Swap</h2>
+            <h2 className="text-xl font-semibold text-white">Configure Hours for Swap</h2>
             <button
               onClick={() => setSelectedMatch(null)}
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-sm transition-colors text-white hover:opacity-70"
             >
               ← Back to matches
             </button>
           </div>
 
           {/* Selected Match Summary */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+          <div className="bg-gray-700 border border-gray-600 rounded-lg p-4 mb-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-gray-600 mb-1">You Teach:</p>
-                <p className="text-gray-900 font-semibold">
+                <p className="mb-1 text-white">You Teach:</p>
+                <p className="font-semibold text-white">
                   {selectedMatch.you_teach.skills?.name}
                 </p>
               </div>
               <div>
-                <p className="text-gray-600 mb-1">You Learn:</p>
-                <p className="text-gray-900 font-semibold">
+                <p className="mb-1 text-white">You Learn:</p>
+                <p className="font-semibold text-white">
                   {selectedMatch.they_teach.skills?.name}
                 </p>
               </div>
             </div>
-            <div className="mt-2 pt-2 border-t border-gray-200">
-              <p className="text-xs text-gray-600">
-                Partner: <span className="font-medium text-gray-900">{selectedMatch.partner.full_name}</span>
+            <div className="mt-2 pt-2 border-t border-gray-600">
+              <p className="text-xs text-white">
+                Partner: <span className="font-medium">{selectedMatch.partner.full_name}</span>
               </p>
-              <p className="text-xs text-gray-600 mt-1">
-                Fairness Score: <span className="font-medium text-primary-600">{selectedMatch.fairness_score}%</span>
+              <p className="text-xs mt-1 text-white">
+                Fairness Score: <span className="font-medium text-primary-400">{selectedMatch.fairness_score}%</span>
               </p>
             </div>
           </div>
@@ -349,15 +349,15 @@ export default function FindSwaps() {
           </div>
         </div>
       ) : matches.length === 0 ? (
-        <div className="card text-center py-12">
+        <div className="card text-center py-12" style={{ backgroundColor: '#1e293b' }}>
           <div className="text-6xl mb-4">😔</div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          <h3 className="text-xl font-semibold mb-2 text-white">
             No Matches Found Yet
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="mb-4 text-white">
             We couldn't find any fair matches at the moment. Try:
           </p>
-          <ul className="text-sm text-gray-600 text-left max-w-md mx-auto space-y-2">
+          <ul className="text-sm text-left max-w-md mx-auto space-y-2 text-white">
             <li>• Adding more skills you can teach</li>
             <li>• Expanding your learning interests</li>
             <li>• Checking back later as more users join</li>
@@ -371,61 +371,61 @@ export default function FindSwaps() {
                 <div className="flex-1">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-900">
+                      <h3 className="text-xl font-semibold text-white">
                         {match.partner.full_name}
                       </h3>
-                      <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
+                      <div className="flex items-center space-x-4 mt-1 text-sm text-white">
                         <span>⭐ {match.partner.reputation_score?.toFixed(1) || '50.0'}</span>
                         <span>🤝 {match.partner.total_swaps_completed || 0} swaps</span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-green-600">
+                      <div className="text-2xl font-bold text-green-400">
                         {match.fairness_score}/100
                       </div>
-                      <div className="text-xs text-gray-600">Fairness Score</div>
+                      <div className="text-xs text-white">Fairness Score</div>
                     </div>
                   </div>
 
                   {/* Exchange Details */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <p className="text-xs text-blue-600 font-medium mb-1">
+                    <div className="bg-blue-600 border border-blue-500 rounded-lg p-4">
+                      <p className="text-xs text-blue-200 font-medium mb-1">
                         🎓 YOU TEACH
                       </p>
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-semibold text-white">
                         {match.you_teach.skills.name}
                       </p>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm mt-1 text-white">
                         Level: {match.you_teach.level} • Available: {match.myTeachCapacity?.remainingHours || 0}h/week
                       </p>
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs mt-2 text-white">
                         Value: {match.you_give_value.toFixed(0)} points
                       </p>
                     </div>
 
-                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                      <p className="text-xs text-purple-600 font-medium mb-1">
+                    <div className="bg-purple-600 border border-purple-500 rounded-lg p-4">
+                      <p className="text-xs text-purple-200 font-medium mb-1">
                         📚 YOU LEARN
                       </p>
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-semibold text-white">
                         {match.they_teach.skills.name}
                       </p>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm mt-1 text-white">
                         Level: {match.they_teach.level} • Available: {match.theirTeachCapacity?.remainingHours || 0}h/week
                       </p>
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs mt-2 text-white">
                         Value: {match.you_receive_value.toFixed(0)} points
                       </p>
                     </div>
                   </div>
 
                   {/* Explanation */}
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <p className="text-sm font-medium text-gray-900 mb-2">
+                  <div className="bg-gray-700 border border-gray-600 rounded-lg p-4">
+                    <p className="text-sm font-medium mb-2 text-white">
                       ⚖️ Why This Match is Fair:
                     </p>
-                    <p className="text-sm text-gray-700">{match.explanation}</p>
+                    <p className="text-sm text-white">{match.explanation}</p>
                   </div>
                 </div>
 
