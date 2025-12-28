@@ -158,7 +158,7 @@ export default function SwapMatchCard({
                 <h3 className="text-base font-bold text-dark-100 mb-1">
                   {displayTeachSkill?.skills?.name || displayTeachSkill?.name || 'Unknown'}
                 </h3>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-1.5 mb-2">
                   {displayTeachSkill?.level && (
                     <span className="badge badge-secondary text-[10px] py-0.5">
                       {displayTeachSkill.level}
@@ -170,6 +170,14 @@ export default function SwapMatchCard({
                     </span>
                   )}
                 </div>
+                {/* Expertise Summary */}
+                {displayTeachSkill?.ai_explanation && (
+                  <div className="mt-2 pt-2 border-t border-primary-800/30">
+                    <p className="text-xs text-dark-300 leading-relaxed line-clamp-2">
+                      {displayTeachSkill.ai_explanation}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Arrow Indicator */}
@@ -206,7 +214,7 @@ export default function SwapMatchCard({
                 <h3 className="text-base font-bold text-dark-100 mb-1">
                   {displayLearnSkill?.skills?.name || displayLearnSkill?.name || 'Unknown'}
                 </h3>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-1.5 mb-2">
                   {displayLearnSkill?.level && (
                     <span className="badge badge-secondary text-[10px] py-0.5">
                       {displayLearnSkill.level}
@@ -219,8 +227,16 @@ export default function SwapMatchCard({
                   )}
                 </div>
                 {otherUser && (
-                  <div className="text-xs text-dark-400 mt-2">
+                  <div className="text-xs text-dark-400 mb-2">
                     from {otherUser.full_name || 'Partner'}
+                  </div>
+                )}
+                {/* Partner's Expertise Summary (for the skill they're teaching) */}
+                {otherUser && displayLearnSkill?.ai_explanation && (
+                  <div className="mt-2 pt-2 border-t border-accent-800/30">
+                    <p className="text-xs text-dark-300 leading-relaxed line-clamp-2">
+                      {displayLearnSkill.ai_explanation}
+                    </p>
                   </div>
                 )}
               </div>
@@ -249,7 +265,8 @@ export default function SwapMatchCard({
                     )}
                     {displayTeachSkill?.ai_explanation && (
                       <div className="mt-2 pt-2 border-t border-dark-700">
-                        <p className="text-dark-400 text-[11px] leading-relaxed line-clamp-3">
+                        <p className="text-xs font-medium text-primary-400 mb-1">Expertise Summary:</p>
+                        <p className="text-dark-300 text-[11px] leading-relaxed">
                           {displayTeachSkill.ai_explanation}
                         </p>
                       </div>

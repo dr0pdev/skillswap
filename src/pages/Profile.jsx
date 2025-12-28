@@ -1,13 +1,17 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
+import { supabase } from '../lib/supabase'
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../utils/constants'
 
 export default function Profile() {
-  const { profile, updateProfile } = useAuth()
+  const { profile, updateProfile, user } = useAuth()
   const { success, error: showError } = useToast()
   const [editing, setEditing] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [uploadingDocument, setUploadingDocument] = useState(false)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [documentType, setDocumentType] = useState('cnic')
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
     bio: profile?.bio || '',
@@ -46,6 +50,111 @@ export default function Profile() {
       timezone: profile?.timezone || '',
     })
     setEditing(false)
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf']
+      if (!validTypes.includes(file.type)) {
+        showError('Please upload a valid image (JPEG, PNG, WebP) or PDF file')
+        return
+      }
+
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        showError('File size must be less than 5MB')
+        return
+      }
+
+      setSelectedFile(file)
+    }
+  }
+
+  const handleDocumentUpload = async () => {
+    if (!selectedFile) {
+      showError('Please select a document to upload')
+      return
+    }
+
+    setUploadingDocument(true)
+
+    try {
+      // Upload file to Supabase Storage
+      const fileExt = selectedFile.name.split('.').pop()
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('verification-documents')
+        .upload(fileName, selectedFile, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError)
+        throw uploadError
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('verification-documents')
+        .getPublicUrl(fileName)
+
+      // Update user record with verification info
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          verification_status: 'pending',
+          verification_document_url: publicUrl,
+          verification_document_type: documentType,
+          verification_submitted_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+
+      if (updateError) {
+        console.error('Update error:', updateError)
+        throw updateError
+      }
+
+      success('Verification document uploaded successfully! Your verification is now pending review.')
+      setSelectedFile(null)
+      
+      // Refresh the page to show updated status
+      window.location.reload()
+    } catch (error) {
+      console.error('Document upload error:', error)
+      showError(error.message || 'Failed to upload verification document. Please try again.')
+    } finally {
+      setUploadingDocument(false)
+    }
+  }
+
+  const getVerificationStatusBadge = (status) => {
+    const badges = {
+      unverified: {
+        color: 'bg-gray-100 text-gray-800 border-gray-300',
+        icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
+        text: 'Not Verified'
+      },
+      pending: {
+        color: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+        icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+        text: 'Pending Review'
+      },
+      verified: {
+        color: 'bg-green-100 text-green-800 border-green-300',
+        icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+        text: 'Verified'
+      },
+      rejected: {
+        color: 'bg-red-100 text-red-800 border-red-300',
+        icon: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z',
+        text: 'Rejected'
+      }
+    }
+    return badges[status] || badges.unverified
   }
 
   return (
@@ -321,6 +430,172 @@ export default function Profile() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Identity Verification */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-bold text-dark-100">Identity Verification</h2>
+            <p className="text-sm text-dark-400 mt-1">Upload your CNIC or Student ID for verification</p>
+          </div>
+          {profile?.verification_status && (
+            <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border ${getVerificationStatusBadge(profile.verification_status).color}`}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={getVerificationStatusBadge(profile.verification_status).icon} />
+              </svg>
+              {getVerificationStatusBadge(profile.verification_status).text}
+            </span>
+          )}
+        </div>
+
+        {profile?.verification_status === 'verified' ? (
+          <div className="bg-success-950/30 border border-success-800/50 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-success-600/20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-success-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-dark-100 font-medium">Your identity has been verified!</p>
+                <p className="text-sm text-dark-400 mt-1">
+                  Verified on {new Date(profile.verification_reviewed_at).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : profile?.verification_status === 'pending' ? (
+          <div className="bg-warning-950/30 border border-warning-800/50 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-warning-600/20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-warning-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-dark-100 font-medium">Your verification is under review</p>
+                <p className="text-sm text-dark-400 mt-1">
+                  Submitted on {new Date(profile.verification_submitted_at).toLocaleDateString()}
+                </p>
+                <p className="text-sm text-dark-400 mt-1">
+                  Document type: {profile.verification_document_type === 'cnic' ? 'CNIC' : 'Student ID'}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : profile?.verification_status === 'rejected' ? (
+          <div className="space-y-4">
+            <div className="bg-error-950/30 border border-error-800/50 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-error-600/20 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6 text-error-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-dark-100 font-medium">Your verification was rejected</p>
+                  {profile.verification_notes && (
+                    <p className="text-sm text-dark-400 mt-1">Reason: {profile.verification_notes}</p>
+                  )}
+                  <p className="text-sm text-dark-400 mt-2">Please upload a new document below.</p>
+                </div>
+              </div>
+            </div>
+            {/* Show upload form for rejected users */}
+          </div>
+        ) : null}
+
+        {(!profile?.verification_status || profile?.verification_status === 'unverified' || profile?.verification_status === 'rejected') && (
+          <div className="space-y-4 mt-4">
+            <div className="bg-dark-900/30 border border-dark-800/50 rounded-lg p-4">
+              <p className="text-sm text-dark-300 mb-3">
+                <strong>Why verify?</strong> Verified users gain more trust in the community and unlock additional features.
+              </p>
+              <ul className="text-sm text-dark-400 space-y-1 list-disc list-inside">
+                <li>Increased visibility in search results</li>
+                <li>Access to premium swap opportunities</li>
+                <li>Build trust with potential swap partners</li>
+              </ul>
+            </div>
+
+            <div>
+              <label className="label">Document Type</label>
+              <div className="flex gap-4 mb-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="documentType"
+                    value="cnic"
+                    checked={documentType === 'cnic'}
+                    onChange={(e) => setDocumentType(e.target.value)}
+                    className="w-4 h-4 text-primary-600"
+                  />
+                  <span className="text-dark-200">CNIC (National ID)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="documentType"
+                    value="student_id"
+                    checked={documentType === 'student_id'}
+                    onChange={(e) => setDocumentType(e.target.value)}
+                    className="w-4 h-4 text-primary-600"
+                  />
+                  <span className="text-dark-200">Student ID</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="label">Upload Document</label>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
+                    onChange={handleFileChange}
+                    className="block w-full text-sm text-dark-300
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-lg file:border-0
+                      file:text-sm file:font-medium
+                      file:bg-primary-950/30 file:text-primary-400
+                      hover:file:bg-primary-950/50
+                      file:cursor-pointer cursor-pointer
+                      border border-dark-700 rounded-lg bg-dark-900/50"
+                  />
+                  <p className="text-xs text-dark-500 mt-2">
+                    Accepted formats: JPEG, PNG, WebP, PDF (Max 5MB)
+                  </p>
+                </div>
+                <button
+                  onClick={handleDocumentUpload}
+                  disabled={!selectedFile || uploadingDocument}
+                  className="btn btn-primary whitespace-nowrap"
+                >
+                  {uploadingDocument ? (
+                    <span className="flex items-center gap-2">
+                      <div className="spinner-small"></div>
+                      Uploading...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      Upload & Submit
+                    </span>
+                  )}
+                </button>
+              </div>
+              {selectedFile && (
+                <p className="text-sm text-primary-400 mt-2">
+                  Selected: {selectedFile.name}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

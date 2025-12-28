@@ -4,11 +4,16 @@ import { ToastProvider } from './contexts/ToastContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/layout/Layout'
+import AdminLayout from './components/layout/AdminLayout'
 
 // Auth pages
 import Login from './components/auth/Login'
 import Signup from './components/auth/SignupWithOTP' // Using OTP-based signup
 import AuthCallback from './components/auth/AuthCallback'
+
+// Admin pages
+import AdminLogin from './pages/admin/AdminLogin'
+import Verifications from './pages/admin/Verifications'
 
 // App pages
 import Dashboard from './pages/Dashboard'
@@ -33,6 +38,27 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+
+          {/* Admin routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route
+            path="/admin/verifications"
+            element={
+              <ProtectedRoute>
+                <AdminLayout>
+                  <Verifications />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={<Navigate to="/admin/verifications" replace />}
+          />
+          <Route
+            path="/admin"
+            element={<Navigate to="/admin/verifications" replace />}
+          />
 
           {/* Protected routes */}
           <Route
