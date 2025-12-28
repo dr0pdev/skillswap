@@ -5,6 +5,8 @@ import { calculateSkillValue, findMatches } from '../utils/matching'
 import { fetchActiveSwaps, filterActiveSkills } from '../utils/activeSwaps'
 import { calculateRemainingHours } from '../utils/capacity'
 import HoursAllocationForm from '../components/swaps/HoursAllocationForm'
+import UserProfileModal from '../components/modals/UserProfileModal'
+import ChatModal from '../components/modals/ChatModal'
 
 export default function FindSwaps() {
   const { user, profile } = useAuth()
@@ -15,6 +17,9 @@ export default function FindSwaps() {
   const [proposedHours, setProposedHours] = useState(1)
   const [timePreferences, setTimePreferences] = useState({})
   const [submitting, setSubmitting] = useState(false)
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [showChatModal, setShowChatModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null)
 
   useEffect(() => {
     if (user?.id && profile?.id) {
@@ -379,11 +384,43 @@ export default function FindSwaps() {
                         <span>🤝 {match.partner.total_swaps_completed || 0} swaps</span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-green-600">
-                        {match.fairness_score}/100
+                    <div className="flex items-center gap-2">
+                      {/* Profile Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedUser(match.partner)
+                          setShowProfileModal(true)
+                        }}
+                        className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-300 flex items-center justify-center transition-colors group"
+                        title="View Profile"
+                      >
+                        <svg className="w-4 h-4 text-gray-600 group-hover:text-primary-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </button>
+                      
+                      {/* Chat Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedUser(match.partner)
+                          setShowChatModal(true)
+                        }}
+                        className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-300 flex items-center justify-center transition-colors group"
+                        title="Chat"
+                      >
+                        <svg className="w-4 h-4 text-gray-600 group-hover:text-accent-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                      </button>
+                      
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-green-600">
+                          {match.fairness_score}/100
+                        </div>
+                        <div className="text-xs text-gray-600">Fairness Score</div>
                       </div>
-                      <div className="text-xs text-gray-600">Fairness Score</div>
                     </div>
                   </div>
 
@@ -457,6 +494,27 @@ export default function FindSwaps() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Modals */}
+      {showProfileModal && selectedUser && (
+        <UserProfileModal 
+          userId={selectedUser.id} 
+          onClose={() => {
+            setShowProfileModal(false)
+            setSelectedUser(null)
+          }} 
+        />
+      )}
+      
+      {showChatModal && selectedUser && (
+        <ChatModal 
+          partner={selectedUser}
+          onClose={() => {
+            setShowChatModal(false)
+            setSelectedUser(null)
+          }} 
+        />
       )}
     </div>
   )

@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import UserProfileModal from '../components/modals/UserProfileModal'
+import ChatModal from '../components/modals/ChatModal'
 
 export default function MySwaps() {
   const { user } = useAuth()
   const [swaps, setSwaps] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [showChatModal, setShowChatModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null)
 
   useEffect(() => {
     if (user?.id) {
@@ -30,7 +35,7 @@ export default function MySwaps() {
           swaps (*),
           teaching_skill:skills!swap_participants_teaching_skill_id_fkey (name),
           learning_skill:skills!swap_participants_learning_skill_id_fkey (name),
-          learning_from:users!swap_participants_learning_from_user_id_fkey (full_name, reputation_score)
+          learning_from:users!swap_participants_learning_from_user_id_fkey (id, full_name, reputation_score)
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
@@ -302,9 +307,46 @@ export default function MySwaps() {
               <div className="flex flex-col lg:flex-row justify-between gap-4 mb-4">
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Swap with {swap.learning_from?.full_name || 'Partner'}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Swap with {swap.learning_from?.full_name || 'Partner'}
+                      </h3>
+                      {/* Profile Button */}
+                      {(swap.learning_from?.id || swap.learning_from_user_id) && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            const userId = swap.learning_from?.id || swap.learning_from_user_id
+                            setSelectedUser({ id: userId, full_name: swap.learning_from?.full_name || 'Partner' })
+                            setShowProfileModal(true)
+                          }}
+                          className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-300 flex items-center justify-center transition-colors group"
+                          title="View Profile"
+                        >
+                          <svg className="w-4 h-4 text-gray-600 group-hover:text-primary-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </button>
+                      )}
+                      
+                      {/* Chat Button */}
+                      {(swap.learning_from?.id || swap.learning_from_user_id) && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            const userId = swap.learning_from?.id || swap.learning_from_user_id
+                            setSelectedUser({ id: userId, full_name: swap.learning_from?.full_name || 'Partner' })
+                            setShowChatModal(true)
+                          }}
+                          className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-300 flex items-center justify-center transition-colors group"
+                          title="Chat"
+                        >
+                          <svg className="w-4 h-4 text-gray-600 group-hover:text-accent-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                     {getStatusBadge(swap.swaps.status)}
                   </div>
 
@@ -414,6 +456,27 @@ export default function MySwaps() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Modals */}
+      {showProfileModal && selectedUser && (
+        <UserProfileModal 
+          userId={selectedUser.id} 
+          onClose={() => {
+            setShowProfileModal(false)
+            setSelectedUser(null)
+          }} 
+        />
+      )}
+      
+      {showChatModal && selectedUser && (
+        <ChatModal 
+          partner={selectedUser}
+          onClose={() => {
+            setShowChatModal(false)
+            setSelectedUser(null)
+          }} 
+        />
       )}
     </div>
   )

@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom'
 import { SKILL_CATEGORIES, SKILL_ROLES } from '../utils/constants'
 import { fetchActiveSwaps, filterActiveSkills } from '../utils/activeSwaps'
 import { getSkillsCapacity } from '../utils/capacity'
+import UserProfileModal from '../components/modals/UserProfileModal'
+import ChatModal from '../components/modals/ChatModal'
 
 export default function Browse() {
   const { user } = useAuth()
@@ -19,6 +21,9 @@ export default function Browse() {
   const [activeLearnSkillIds, setActiveLearnSkillIds] = useState([]) // Skills already being learned
   const [activeSwapsMap, setActiveSwapsMap] = useState({}) // Map of skill_id -> swap_id
   const [skillsCapacity, setSkillsCapacity] = useState({}) // Capacity info for skills
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [showChatModal, setShowChatModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null)
 
   const categories = ['all', ...SKILL_CATEGORIES]
 
@@ -344,6 +349,37 @@ export default function Browse() {
                     <span>{skill.users.reputation_score?.toFixed(1) || '5.0'}</span>
                   </div>
                 </div>
+                <div className="flex items-center gap-2">
+                  {/* Profile Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setSelectedUser(skill.users)
+                      setShowProfileModal(true)
+                    }}
+                    className="w-8 h-8 rounded-lg bg-dark-800 hover:bg-dark-700 border border-dark-700 flex items-center justify-center transition-colors group"
+                    title="View Profile"
+                  >
+                    <svg className="w-4 h-4 text-dark-400 group-hover:text-primary-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </button>
+                  
+                  {/* Chat Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setSelectedUser(skill.users)
+                      setShowChatModal(true)
+                    }}
+                    className="w-8 h-8 rounded-lg bg-dark-800 hover:bg-dark-700 border border-dark-700 flex items-center justify-center transition-colors group"
+                    title="Chat"
+                  >
+                    <svg className="w-4 h-4 text-dark-400 group-hover:text-accent-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               {/* Skill Details */}
@@ -547,6 +583,27 @@ export default function Browse() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Modals */}
+      {showProfileModal && selectedUser && (
+        <UserProfileModal 
+          userId={selectedUser.id} 
+          onClose={() => {
+            setShowProfileModal(false)
+            setSelectedUser(null)
+          }} 
+        />
+      )}
+      
+      {showChatModal && selectedUser && (
+        <ChatModal 
+          partner={selectedUser}
+          onClose={() => {
+            setShowChatModal(false)
+            setSelectedUser(null)
+          }} 
+        />
       )}
     </div>
   )
