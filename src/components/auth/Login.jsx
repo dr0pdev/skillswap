@@ -171,13 +171,30 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-y-3">
             <p className="text-dark-400">
               Don't have an account?{' '}
               <Link to="/signup" className="text-primary-400 hover:text-primary-300 font-medium transition-colors">
                 Sign up
               </Link>
             </p>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-dark-800"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-dark-900 text-dark-500">or</span>
+              </div>
+            </div>
+            <Link 
+              to="/admin/login" 
+              className="flex items-center justify-center gap-2 text-dark-400 hover:text-warning-400 transition-colors text-sm"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              Admin Login
+            </Link>
           </div>
         </div>
 
