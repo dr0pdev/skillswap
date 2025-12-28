@@ -255,11 +255,11 @@ export default function Chat() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-dark-100 flex items-center gap-3">
-            <ChatBubbleLeftRightIcon className="w-8 h-8 text-primary-500" />
+          <h1 className="text-3xl font-bold text-[#0C243D] flex items-center gap-3 ">
+            <ChatBubbleLeftRightIcon className="w-8 h-8 text-primary-500 " />
             Messages
           </h1>
-          <p className="text-dark-400 mt-1">
+          <p className="text-[#0C243D] mt-1">
             Connect with your swap partners
           </p>
         </div>

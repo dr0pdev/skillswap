@@ -38,7 +38,7 @@ export default function SkillCard({ skill, onDelete }) {
   const roleInfo = getRoleInfo(skill.role)
 
   return (
-    <div className="card-hover">
+    <div className="rounded-xl border border-dark-700 shadow-md hover:shadow-lg transition-all duration-300 p-6" style={{ backgroundColor: 'rgba(15, 23, 42, 0.5)' }}>
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
           <h3 className="text-xl font-semibold text-dark-100 mb-3">

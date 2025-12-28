@@ -253,8 +253,8 @@ export default function MySwaps() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">My Swaps</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-3xl font-bold" style={{ color: '#0C243D' }}>My Swaps</h1>
+        <p className="mt-1" style={{ color: '#0C243D' }}>
           Track your skill exchange agreements
         </p>
       </div>
@@ -272,9 +272,23 @@ export default function MySwaps() {
               onClick={() => setFilter(status)}
               className={`px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap ${
                 filter === status
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  ? 'border-primary-600'
+                  : 'border-transparent'
               }`}
+              style={{ 
+                color: filter === status ? '#0C243D' : '#0C243D',
+                borderBottomColor: filter === status ? '#0C243D' : 'transparent'
+              }}
+              onMouseEnter={(e) => {
+                if (filter !== status) {
+                  e.target.style.opacity = '0.7'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (filter !== status) {
+                  e.target.style.opacity = '1'
+                }
+              }}
             >
               {status.charAt(0).toUpperCase() + status.slice(1)} ({count})
             </button>
@@ -284,18 +298,22 @@ export default function MySwaps() {
 
       {/* Swaps List */}
       {filteredSwaps.length === 0 ? (
-        <div className="card text-center py-12">
+        <div className="card text-center py-12" style={{ backgroundColor: '#1e293b' }}>
           <div className="text-6xl mb-4">🤝</div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          <h3 className="text-xl font-semibold text-white mb-2">
             No {filter !== 'all' ? filter : ''} swaps yet
           </h3>
-          <p className="text-gray-600 mb-6">
+          <p className="text-white mb-6">
             {filter === 'all'
               ? 'Start by finding matches and proposing swaps!'
               : `You don't have any ${filter} swaps.`}
           </p>
           {filter === 'all' && (
-            <a href="/find-swaps" className="btn btn-primary">
+            <a 
+              href="/find-swaps" 
+              className="btn mt-1 text-white font-medium px-6 py-3 rounded-lg transition-all duration-300 hover:opacity-90"
+              style={{ backgroundColor: '#27496A' }}
+            >
               Find Swaps
             </a>
           )}
@@ -308,7 +326,7 @@ export default function MySwaps() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-[#0C243D] mt-1">
                         Swap with {swap.learning_from?.full_name || 'Partner'}
                       </h3>
                       {/* Profile Button */}
