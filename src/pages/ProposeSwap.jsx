@@ -4,7 +4,9 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import SwapMatchCard from '../components/swaps/SwapMatchCard'
 import AddSkillModal from '../components/skills/AddSkillModal'
+import HoursAllocationForm from '../components/swaps/HoursAllocationForm'
 import { checkDuplicateProposal } from '../utils/activeSwaps'
+import { calculateRemainingHours } from '../utils/capacity'
 
 export default function ProposeSwap() {
   const location = useLocation()
@@ -24,6 +26,13 @@ export default function ProposeSwap() {
   const [myLearningSkills, setMyLearningSkills] = useState([]) // Used in mode='teach'
   const [theirTeachingSkills, setTheirTeachingSkills] = useState([]) // Used in mode='teach'
   const [theirLearningRequests, setTheirLearningRequests] = useState([]) // Used in mode='learn'
+  
+  // Hours and capacity
+  const [proposedHours, setProposedHours] = useState(1)
+  const [timePreferences, setTimePreferences] = useState({})
+  const [teacherCapacity, setTeacherCapacity] = useState({})
+  const [learnerCapacity, setLearnerCapacity] = useState({})
+  const [selectedSwap, setSelectedSwap] = useState(null) // Currently selected swap for hours allocation
   
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -292,14 +301,41 @@ export default function ProposeSwap() {
 
   // Handle propose swap
   const handleProposeSwap = async (swap) => {
-    if (!swap.teachSkill || !swap.learnSkill) {
+    // First, select the swap and show hours form
+    setSelectedSwap(swap)
+    
+    // Fetch capacity for this specific swap
+    try {
+      const teachSkillId = swap.teachSkill.skill_id
+      const learnSkillId = swap.learnSkill.skill_id
+      const teacherUserId = mode === 'learn' ? user.id : otherUser.id
+      const learnerUserId = mode === 'learn' ? otherUser.id : user.id
+
+      const [teachCapacity, learnCapacity] = await Promise.all([
+        calculateRemainingHours(teacherUserId, teachSkillId, 'teach'),
+        calculateRemainingHours(learnerUserId, learnSkillId, 'learn')
+      ])
+
+      setTeacherCapacity(teachCapacity)
+      setLearnerCapacity(learnCapacity)
+      
+      // Set initial hours to max available or 1, whichever is lower
+      const maxHours = Math.min(teachCapacity.remainingHours || 1, learnCapacity.remainingHours || 1)
+      setProposedHours(Math.min(1, maxHours))
+    } catch (error) {
+      console.error('Error fetching capacity:', error)
+    }
+  }
+
+  const handleConfirmProposal = async () => {
+    if (!selectedSwap || !selectedSwap.teachSkill || !selectedSwap.learnSkill) {
       alert('Invalid swap configuration')
       return
     }
 
     // Validation based on mode
     if (mode === 'learn') {
-      const swapLearnSkillId = swap.learnSkill.skill_id || swap.learnSkill.skills?.id
+      const swapLearnSkillId = selectedSwap.learnSkill.skill_id || selectedSwap.learnSkill.skills?.id
       const lockedLearnSkillId = learnSkill.skill_id || learnSkill.skills?.id
       
       if (swapLearnSkillId !== lockedLearnSkillId) {
@@ -308,7 +344,7 @@ export default function ProposeSwap() {
         return
       }
     } else if (mode === 'teach') {
-      const swapTeachSkillId = swap.teachSkill.skill_id || swap.teachSkill.skills?.id
+      const swapTeachSkillId = selectedSwap.teachSkill.skill_id || selectedSwap.teachSkill.skills?.id
       const lockedTeachSkillId = teachSkill.skill_id || teachSkill.skills?.id
       
       if (swapTeachSkillId !== lockedTeachSkillId) {
@@ -316,6 +352,17 @@ export default function ProposeSwap() {
         alert('Error: Teach skill mismatch. Please refresh and try again.')
         return
       }
+    }
+
+    // Validate hours
+    const maxAvailable = Math.min(
+      teacherCapacity.remainingHours || 0,
+      learnerCapacity.remainingHours || 0
+    )
+
+    if (proposedHours <= 0 || proposedHours > maxAvailable) {
+      alert(`Please select between 0.5 and ${maxAvailable} hours per week.`)
+      return
     }
 
     setSubmitting(true)
@@ -332,8 +379,8 @@ export default function ProposeSwap() {
         throw new Error('You must be logged in to create a swap proposal. Please log in and try again.')
       }
 
-      const teachSkillId = swap.teachSkill.skill_id
-      const learnSkillId = swap.learnSkill.skill_id
+      const teachSkillId = selectedSwap.teachSkill.skill_id
+      const learnSkillId = selectedSwap.learnSkill.skill_id
       const theirUserId = otherUser?.id
 
       if (!teachSkillId || !learnSkillId || !theirUserId) {
@@ -353,7 +400,8 @@ export default function ProposeSwap() {
         teachSkillId,
         learnSkillId,
         theirUserId,
-        matchScore: swap.matchScore,
+        matchScore: selectedSwap.matchScore,
+        hours: proposedHours,
         mode
       })
 
@@ -363,8 +411,8 @@ export default function ProposeSwap() {
         .insert({
           swap_type: 'direct',
           status: 'proposed',
-          fairness_score: swap.matchScore || 50,
-          balance_explanation: `Match score: ${swap.matchScore || 0}/100. ${mode === 'learn' ? 'You learn from them' : 'You teach them'}.`,
+          fairness_score: selectedSwap.matchScore || 50,
+          balance_explanation: `Match score: ${selectedSwap.matchScore || 0}/100. ${proposedHours}h/week commitment.`,
         })
         .select()
         .single()
@@ -377,7 +425,7 @@ export default function ProposeSwap() {
         throw swapError
       }
 
-      // Add participants
+      // Add participants with hours
       const { error: participantsError } = await supabase
         .from('swap_participants')
         .insert([
@@ -387,6 +435,10 @@ export default function ProposeSwap() {
             teaching_skill_id: teachSkillId,
             learning_skill_id: learnSkillId,
             learning_from_user_id: theirUserId,
+            teaching_hours_per_week: proposedHours,
+            learning_hours_per_week: proposedHours,
+            preferred_days: timePreferences.days ? [timePreferences.days] : null,
+            preferred_times: timePreferences.time ? [timePreferences.time] : null,
           },
           {
             swap_id: swapRecord.id,
@@ -394,6 +446,8 @@ export default function ProposeSwap() {
             teaching_skill_id: learnSkillId,
             learning_skill_id: teachSkillId,
             learning_from_user_id: user.id,
+            teaching_hours_per_week: proposedHours,
+            learning_hours_per_week: proposedHours,
           },
         ])
 
@@ -490,7 +544,63 @@ export default function ProposeSwap() {
           )}
         </div>
 
-        {hasMatches ? (
+        {selectedSwap ? (
+          /* Hours Allocation Form */
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-dark-100">Allocate Hours for Swap</h3>
+              <button
+                onClick={() => setSelectedSwap(null)}
+                className="text-sm text-dark-400 hover:text-dark-200 transition-colors"
+              >
+                ← Back to swap options
+              </button>
+            </div>
+
+            {/* Selected Swap Summary */}
+            <div className="bg-dark-800/50 border border-dark-700 rounded-lg p-4 mb-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-dark-500 mb-1">You Teach:</p>
+                  <p className="text-dark-100 font-semibold">
+                    {selectedSwap.teachSkill?.skills?.name || selectedSwap.teachSkill?.name}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-dark-500 mb-1">You Learn:</p>
+                  <p className="text-dark-100 font-semibold">
+                    {selectedSwap.learnSkill?.skills?.name || selectedSwap.learnSkill?.name}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <HoursAllocationForm
+              teacherCapacity={teacherCapacity}
+              learnerCapacity={learnerCapacity}
+              onHoursChange={setProposedHours}
+              onPreferencesChange={setTimePreferences}
+              initialHours={proposedHours}
+              initialPreferences={timePreferences}
+            />
+
+            <div className="flex gap-3 pt-4">
+              <button
+                onClick={() => setSelectedSwap(null)}
+                className="btn btn-secondary flex-1"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmProposal}
+                disabled={submitting || proposedHours <= 0}
+                className="btn btn-primary flex-[2]"
+              >
+                {submitting ? 'Sending...' : 'Confirm & Send Proposal'}
+              </button>
+            </div>
+          </div>
+        ) : hasMatches ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {possibleSwaps.map((swap, index) => (
               <SwapMatchCard

@@ -83,16 +83,37 @@ export default function MySwaps() {
     if (!confirm('Are you sure you want to decline this proposal?')) return
 
     try {
-      await supabase
+      // Update swap status to cancelled (declined swaps use 'cancelled' status)
+      const { error: swapError } = await supabase
         .from('swaps')
-        .update({ status: 'declined' })
+        .update({ 
+          status: 'cancelled',
+          declined_at: new Date().toISOString()
+        })
         .eq('id', swapId)
 
+      if (swapError) {
+        console.error('Error updating swap:', swapError)
+        throw swapError
+      }
+
+      // Also update participant status
+      const { error: participantError } = await supabase
+        .from('swap_participants')
+        .update({ has_accepted: false })
+        .eq('swap_id', swapId)
+        .eq('user_id', user.id)
+
+      if (participantError) {
+        console.error('Error updating participant:', participantError)
+        // Don't throw - swap status update is more important
+      }
+
       fetchSwaps()
-      alert('Proposal declined')
+      alert('Proposal declined successfully')
     } catch (error) {
       console.error('Error declining swap:', error)
-      alert('Failed to decline swap')
+      alert(`Failed to decline swap: ${error.message || 'Please try again'}`)
     }
   }
 

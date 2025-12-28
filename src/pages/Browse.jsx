@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import { SKILL_CATEGORIES, SKILL_ROLES } from '../utils/constants'
 import { fetchActiveSwaps, filterActiveSkills } from '../utils/activeSwaps'
+import { getSkillsCapacity } from '../utils/capacity'
 
 export default function Browse() {
   const { user } = useAuth()
@@ -17,6 +18,7 @@ export default function Browse() {
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [activeLearnSkillIds, setActiveLearnSkillIds] = useState([]) // Skills already being learned
   const [activeSwapsMap, setActiveSwapsMap] = useState({}) // Map of skill_id -> swap_id
+  const [skillsCapacity, setSkillsCapacity] = useState({}) // Capacity info for skills
 
   const categories = ['all', ...SKILL_CATEGORIES]
 
@@ -104,6 +106,22 @@ export default function Browse() {
 
           setSkills(filteredData)
           setFilteredSkills(filteredData)
+
+          // Fetch capacity info for teaching tab
+          if (activeTab === SKILL_ROLES.TEACH && filteredData.length > 0) {
+            // Get unique user IDs
+            const userIds = [...new Set(filteredData.map(skill => skill.user_id))]
+            const capacityMap = {}
+
+            // For each user's skills, get capacity
+            for (const userId of userIds) {
+              const userSkills = filteredData.filter(s => s.user_id === userId)
+              const capacity = await getSkillsCapacity(userId, userSkills, 'teach')
+              Object.assign(capacityMap, capacity)
+            }
+
+            setSkillsCapacity(capacityMap)
+          }
         }
       } catch (error) {
         console.error('Browse failed:', error)
@@ -399,7 +417,101 @@ export default function Browse() {
               {(() => {
                 const skillId = skill.skill_id || skill.skills?.id
                 const isAlreadyLearning = activeTab === SKILL_ROLES.TEACH && activeLearnSkillIds.includes(skillId)
+                const capacity = skillsCapacity[skillId] || {}
+                const isFullyBooked = activeTab === SKILL_ROLES.TEACH && capacity.isFullyBooked
+                const isPartiallyBooked = activeTab === SKILL_ROLES.TEACH && capacity.isPartiallyBooked
                 
+                // Show capacity info for teaching tab
+                if (activeTab === SKILL_ROLES.TEACH && (capacity.totalCapacity > 0)) {
+                  return (
+                    <div className="space-y-2">
+                      {/* Capacity Display */}
+                      <div className="text-sm text-dark-300 mb-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-dark-500">Available:</span>
+                          <span className={`font-semibold ${
+                            isFullyBooked ? 'text-error-400' : 
+                            isPartiallyBooked ? 'text-warning-400' : 
+                            'text-success-400'
+                          }`}>
+                            {capacity.remainingHours}h / {capacity.totalCapacity}h per week
+                          </span>
+                        </div>
+                        {capacity.allocatedHours > 0 && (
+                          <div className="w-full bg-dark-700 rounded-full h-1.5">
+                            <div
+                              className={`h-1.5 rounded-full transition-all ${
+                                isFullyBooked ? 'bg-error-600' : 'bg-primary-600'
+                              }`}
+                              style={{ width: `${(capacity.allocatedHours / capacity.totalCapacity) * 100}%` }}
+                            ></div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Status Badges */}
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {isFullyBooked && (
+                          <span className="badge badge-error text-[10px]">
+                            Fully Booked
+                          </span>
+                        )}
+                        {isPartiallyBooked && (
+                          <span className="badge badge-warning text-[10px]">
+                            Partially Booked
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      {isAlreadyLearning ? (
+                        <>
+                          <div className="w-full px-4 py-2.5 bg-success-950/20 border border-success-700/50 rounded-lg text-center">
+                            <span className="text-xs font-semibold text-success-400">✓ Already Learning</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              const swapId = activeSwapsMap[skillId]
+                              navigate('/my-swaps', { state: { highlightSwapId: swapId } })
+                            }}
+                            className="btn btn-secondary w-full text-sm"
+                          >
+                            View Active Swap
+                          </button>
+                        </>
+                      ) : isFullyBooked ? (
+                        <>
+                          <div className="w-full px-4 py-2.5 bg-error-950/20 border border-error-700/50 rounded-lg text-center">
+                            <span className="text-xs font-semibold text-error-400">Fully Booked</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              // Open profile modal to see schedule
+                              alert('View profile to see when they might be available')
+                            }}
+                            className="btn btn-secondary w-full text-sm"
+                          >
+                            View Profile
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => handleRequestToLearn(skill)}
+                          className="btn btn-primary w-full"
+                        >
+                          Request to Learn
+                          {isPartiallyBooked && (
+                            <span className="ml-2 text-[10px] opacity-75">
+                              ({capacity.remainingHours}h left)
+                            </span>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  )
+                }
+                
+                // Default for learning tab or no capacity data
                 if (isAlreadyLearning) {
                   return (
                     <div className="space-y-2">

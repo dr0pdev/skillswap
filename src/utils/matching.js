@@ -36,6 +36,7 @@ export function calculateSkillValue(userSkill, skillData, userReputation) {
 /**
  * Calculate fairness score between two skill values
  * Returns 0-100, where 100 is perfectly fair
+ * LOWERED THRESHOLD: Now accepts matches with 40+ fairness (was 60+)
  */
 export function calculateFairness(value1, value2) {
   if (value1 === 0 || value2 === 0) return 0
@@ -81,9 +82,17 @@ export function generateExplanation(
 export async function findMatches(userId, teachingSkills, learningSkills, userProfile) {
   const matches = []
 
+  console.log('🔍 FindMatches called with:', {
+    userId,
+    teachingSkills: teachingSkills.map(s => ({ id: s.skill_id, name: s.skills?.name })),
+    learningSkills: learningSkills.map(s => ({ id: s.skill_id, name: s.skills?.name }))
+  })
+
   try {
     // For each skill the user wants to learn
     for (const learningSkill of learningSkills) {
+      console.log(`\n📚 Looking for teachers of: ${learningSkill.skills?.name} (skill_id: ${learningSkill.skill_id})`)
+      
       // Find users who can teach it
       const { data: potentialTeachers, error: teachersError } = await supabase
         .from('user_skills')
@@ -98,9 +107,19 @@ export async function findMatches(userId, teachingSkills, learningSkills, userPr
         .neq('user_id', userId)
 
       if (teachersError) throw teachersError
+      
+      console.log(`   Found ${potentialTeachers?.length || 0} potential teachers:`, 
+        potentialTeachers?.map(t => ({ 
+          user: t.users?.full_name || t.users?.email,
+          userId: t.user_id,
+          level: t.level 
+        }))
+      )
 
       // For each potential teacher
       for (const teacher of potentialTeachers || []) {
+        console.log(`\n   👤 Checking teacher: ${teacher.users?.full_name || teacher.users?.email}`)
+        
         // Check if they want to learn any of our teaching skills
         const { data: theirLearning, error: learningError } = await supabase
           .from('user_skills')
@@ -113,6 +132,13 @@ export async function findMatches(userId, teachingSkills, learningSkills, userPr
           .eq('is_active', true)
 
         if (learningError) throw learningError
+        
+        console.log(`      They want to learn:`, 
+          theirLearning?.map(l => ({ id: l.skill_id, name: l.skills?.name })) || []
+        )
+        console.log(`      We teach:`, 
+          teachingSkills.map(t => ({ id: t.skill_id, name: t.skills?.name }))
+        )
 
         // Find overlapping skills
         for (const theirLearnSkill of theirLearning || []) {
@@ -120,7 +146,10 @@ export async function findMatches(userId, teachingSkills, learningSkills, userPr
             (ts) => ts.skill_id === theirLearnSkill.skill_id
           )
 
+          console.log(`      Checking if we teach ${theirLearnSkill.skills?.name}:`, !!weTeach)
+
           if (weTeach) {
+            console.log(`      ✅ MATCH FOUND! We teach ${weTeach.skills?.name}, they want to learn it!`)
             // Calculate values
             const ourValue = calculateSkillValue(
               weTeach,
@@ -137,8 +166,16 @@ export async function findMatches(userId, teachingSkills, learningSkills, userPr
             // Calculate fairness
             const fairnessScore = calculateFairness(ourValue, theirValue)
 
-            // Only include matches above fairness threshold (60+)
-            if (fairnessScore >= 60) {
+            console.log(`      📊 Fairness calculation:`, {
+              ourValue,
+              theirValue,
+              fairnessScore,
+              threshold: 40,
+              passes: fairnessScore >= 40
+            })
+
+            // Lowered threshold from 60 to 40 for more matches
+            if (fairnessScore >= 40) {
               const explanation = generateExplanation(
                 weTeach,
                 teacher,
@@ -146,6 +183,8 @@ export async function findMatches(userId, teachingSkills, learningSkills, userPr
                 theirValue,
                 fairnessScore
               )
+
+              console.log(`      ✅ Adding match with fairness score ${fairnessScore}`)
 
               matches.push({
                 partner: teacher.users,
@@ -160,19 +199,23 @@ export async function findMatches(userId, teachingSkills, learningSkills, userPr
                 fairness_score: fairnessScore,
                 explanation,
               })
+            } else {
+              console.log(`      ❌ Fairness score too low: ${fairnessScore} (need >= 40)`)
             }
           }
         }
       }
     }
 
+    console.log(`\n🎯 Total matches found: ${matches.length}`)
+    
     // Sort by fairness score (best matches first)
     matches.sort((a, b) => b.fairness_score - a.fairness_score)
 
     // Return top 20 matches
     return matches.slice(0, 20)
   } catch (error) {
-    console.error('Error in findMatches:', error)
+    console.error('❌ Error in findMatches:', error)
     return []
   }
 }
